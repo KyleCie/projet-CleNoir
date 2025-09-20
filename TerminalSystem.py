@@ -33,6 +33,12 @@ class PrintSystem:
         self.name_color = self.colors.get(self.name_color)
         self.content_color = self.colors.get(self.content_color)
 
+        self.note_info_color = self.params.get("note_info_color", "WHITE")
+        self.note_content_color =self.params.get("note_content_color", "WHITE")
+
+        self.note_info_color = self.colors.get(self.note_info_color)
+        self.note_content_color = self.colors.get(self.note_content_color)
+
     def _change_msg_colors(self, colors: tuple[str, str, str]) -> None:
         """Change messages colors."""
 
@@ -40,8 +46,30 @@ class PrintSystem:
         self.name_color = self.colors.get(colors[1], self.name_color)
         self.content_color = self.colors.get(colors[2], self.content_color)
 
+    def _chang_notes_colors(self, colors: tuple[str, str]) -> None:
+        """Change notes colors."""
+
+        self.note_info_color = self.colors.get(colors[0], self.note_info_color)
+        self.note_content_color = self.colors.get(colors[1], self.note_content_color)
+
+    def _print_notes(self, notes: list[tuple[str, str]]) -> None:
+        """Print in the terminal the notes."""
+
+        if notes == ["NO NOTES"]:
+            print(f"{self.note_info_color}NO NOTES{Style.RESET_ALL}")
+            return
+        
+        for note in notes[:-1]:
+            print(f"{self.note_info_color}{note[0]} {self.note_content_color}{note[1]}")
+
+        print(f"{self.note_info_color}{notes[-1][0]} {self.note_content_color}{notes[-1][1]}{Style.RESET_ALL}")
+
     def _print_messages(self, messages: list[tuple[str, str, str]]) -> None:
         """Print in the terminal the messages."""
+
+        if messages == ["NO MESSAGES"]:
+            print(f"{self.info_color}NO MESSAGES{Style.RESET_ALL}")
+            return
 
         for msg in messages[:-1]:
             print(f"{self.info_color}{msg[0]}{self.name_color}{msg[1]} {self.content_color}{msg[2]}")
@@ -55,10 +83,20 @@ class terminal:
         self.print = PrintSystem(messages_parameters)
         print("Printer and terminal system done.")
 
+    def print_notes(self, notes: list[tuple[str, str]]) -> None:
+        """Print in the terminal the notes with the parameter's user."""
+
+        self.print._print_notes(notes)
+
     def print_messages(self, messages: list[tuple[str, str, str]]) -> None:
         """Print in the terminal the messages with the parameter's user."""
 
         self.print._print_messages(messages)
+
+    def change_notes_colors(self, colors: tuple[str, str]) -> None:
+        """Change parameters for notes colors."""
+
+        self.print._chang_notes_colors(colors)
 
     def change_messages_colors(self, colors: tuple[str, str, str]) -> None:
         """Change parameters for messages colors."""

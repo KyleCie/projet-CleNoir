@@ -15,14 +15,17 @@ if __name__ == "__main__":
 
     print("Starting...")
 
-    example_msg = (["[DATE HOUR]", "[PSEUDO]", "ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz 1234567890 ,?;.:/!"]) # example message for parameters.
+    example_msg = ("[DATE HOUR]", "[PSEUDO]", "ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz 1234567890 ,?;.:/!") # example message for parameters.
+    example_note = ("[DATE HOUR]", "ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz 1234567890 ,?;.:/!") # example note for parameters.
+
     myself = msg.get_my_pseudo()    # my own pseudo.
     key_receiver = ""   # public key receiver for the message system.
     cov_reveiver = ""   # conversaton name for the message system.
+
     #sleep(1)   # TODO: remove this command to activate.
 
     type_cmd = "command"
-    #itptr.run("clear")
+    itptr.run("clear")
 
     while True:
 
@@ -58,6 +61,10 @@ if __name__ == "__main__":
                 case "REFRESH":
                     print("refreshing...")
                     msg.refresh()
+
+                case "EXIT":
+                    print("Exiting...")
+                    exit()
 
                 case _:
                     continue
@@ -114,7 +121,7 @@ if __name__ == "__main__":
                                 msg.send(encr_msg, cov_reveiver)
 
                                 last_msg = msg.find_messages(cov_reveiver)
-                                last_msg = last_msg[last_cov_index-1:]  # get the delta messages (new messages).
+                                last_msg = last_msg[last_cov_index:]  # get the delta messages (new messages).
                                 last_cov_index += len(last_msg)     # reindexing last messages.
 
                                 last_msg = encr.decrypt_messages(last_msg, myself)
@@ -124,11 +131,66 @@ if __name__ == "__main__":
 
                     type_cmd = "command"    # reput in command system.
 
-                case "CHANGE_MSG_COLOR":
+                case "MYSPACE":     # connect with user's myspace.
+
+                    my_space = result[1]
+
+                    print(f"Finding a myspace with '{my_space}'...")
+                    msg.find_myspace()
+                    print("Getting the notes...")
+
+                    type_cmd = "message"
+                    itptr.run("clear")
+
+                    notes = msg.find_notes_myspace(my_space)
+                    notes = encr.decrypt_notes_myspace(notes)
+                    notes = msg.transform_notes(notes)
+                    last_note_index = len(notes)
+
+                    printer.print_notes(notes)
+
+                    while True:
+                        raw_note = input(f"[{type_cmd}] >>> ")
+                        itptr.run("clearline")
+
+                        match raw_note:
+
+                            case "$exit":   # exit.
+                                break
+
+                            case "$e":      # exit.
+                                break
+
+                            case "":        # empty.
+                                continue
+
+                            case _:         # send.
+
+                                encr_note = encr.encrypt_note(raw_note)
+                                msg.send_note(encr_note, my_space)
+
+                                last_note = msg.find_notes_myspace(my_space)
+                                last_note = last_note[last_note_index:]  # get the delta notes (new notes).
+                                last_note_index += len(last_note)     # reindexing last notes.
+
+                                last_note = encr.decrypt_notes_myspace(last_note)
+                                last_note = msg.transform_notes(last_note)
+
+                                printer.print_notes(last_note) # print new conversation (notes).
+
+                    type_cmd = "command"    # reput in command system.  
+
+                case "CHANGE_MSG_COLOR":    # change colors messages parameters.
 
                     printer.change_messages_colors(result[1:])
                     print("RESULT :")
                     printer.print_messages([example_msg])
+
+                case "CHANGE_NOTES_COLOR":  # change colors notes parameters.
+
+                    printer.change_notes_colors(result[1:])
+                    print("RESULT :")
+                    printer.print_notes([example_note])
 
                 case _:     # can't find anything with it.
                     continue

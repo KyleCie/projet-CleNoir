@@ -62,8 +62,27 @@ class commandSystem:
 
         return "REFRESH"
     
-    def _change_system(self, command: str, *args) -> tuple[Literal["CHANGE_MSG_COLOR"], str, str, str] | None:
-        """change parameter's user."""
+    def _exit(self, *args) -> Literal["EXIT"]:
+        """Return a command to the main to exit the program."""
+
+        return "EXIT"
+    
+    def _myspace_system(self, command: str, *args) -> tuple[Literal["MYSPACE"], str]:
+        """Return a command to the main to access the myspace's user."""
+        
+        clean_cmd = self._clean_command(command, -1, 1)
+        clean_cmd = self._to_tuple_command(clean_cmd)
+
+        if len(clean_cmd) != 0:
+            
+            return ("MYSPACE", " ".join(clean_cmd))
+        
+        myspace_name = input("Myspace name : ")
+
+        return ("MYSPACE", myspace_name)
+
+    def _change_system(self, command: str, *args) -> tuple[str, ...] | None:
+        """Return a command to the main to change parameter's user."""
 
         clean_cmd = self._clean_command(command, -1, 1)
         clean_cmd = self._to_tuple_command(clean_cmd)
@@ -85,6 +104,19 @@ class commandSystem:
                         color3 = input("Color for content (empty = don't change) : ").upper()
 
                         return ("CHANGE_MSG_COLOR", color1, color2, color3)
+
+                case "note":
+                    
+                    if clean_cmd[1] == "color":
+                        if clean_cmd[-1] != "color":
+
+                            return ("CHANGE_MSG_COLOR", clean_cmd[2].upper(), clean_cmd[3].upper())
+
+                        print("Colors available : WHITE, BLACK, YELLOW, GREEN, RED, PURPLE.")
+                        color1 = input("Color for informations (empty = don't change) : ").upper()
+                        color2 = input("Color for content (empty = don't change) : ").upper()
+
+                        return ("CHANGE_NOTES_COLOR", color1, color2)
 
                 case _:
                     self._error_not_found(f"change -> {clean_cmd[0]}")
@@ -183,7 +215,9 @@ class interpreter:
             "connect": self.commands._connect_conversation,
             "clearline": self.commands._clear_line_terminal,
             "refresh": self.commands._refresh,
-            "change": self.commands._change_system
+            "change": self.commands._change_system,
+            "myspace": self.commands._myspace_system,
+            "exit": self.commands._exit
         }
 
         print("Interpreter system done.")

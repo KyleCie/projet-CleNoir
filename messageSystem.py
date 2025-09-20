@@ -82,6 +82,14 @@ class dataSystem:
         
         self.PublicKeys = self._get_RSA_keys()
 
+    def _send_note(self, data: dict, myself_name: str) -> None:
+        """Send data `data` to the child database."""
+
+        if not self.database:
+            exit()
+
+        self.database.child(self.my_name).child(myself_name).push(data)
+
     def _send(self, data: dict, database: str, is_msg: bool = False) -> None:
         """Send a data `data` to the child database named `database`"""
 
@@ -107,6 +115,25 @@ class dataSystem:
 
         self.database.child(database).child("messages").push(data)
 
+    def _get_data_from_myspace(self, name: str) -> list[dict]:
+        """Return the raw data from myspace `myspace`."""
+
+        if not self.database:
+            exit()
+
+        notes = self.database.child(self.my_name).child(name).get()
+        notes = notes.each()
+
+        if notes is None:
+            return []
+
+        list_notes: list[dict] = []
+
+        for note in notes:
+            list_notes.append(note.val())
+
+        return list_notes
+
     @overload # last_one handler.
     def  _get_data_from_database(self, database: str, last_one: bool = True) -> str: ...
 
@@ -129,14 +156,28 @@ class dataSystem:
 
             list_msg: list[dict] = []
 
-            if messages:
-                for msg in messages:
-                    list_msg.append(msg.val())
+            for msg in messages:
+                list_msg.append(msg.val())
 
             return list_msg
         
         return [messages[-1].val()]
     
+    def _data_to_notes(self, data: list[dict]) -> list[tuple[str, str]]:
+        """Return a printable data from `data`."""
+
+        list_notes: list[tuple[str, str]] = []
+
+        for note in data:
+            dt = datetime.fromtimestamp(note.get("timestamp"))
+            dt = dt.strftime("%d/%m/%Y %H:%M:%S")
+            list_notes.append((f"[{dt}]", f"{note.get("data")}"))
+
+        if list_notes != []:
+            return list_notes
+        
+        return ["NO NOTES"]
+
     def _data_to_msg(self, data: list[dict]) -> list[tuple[str, str, str]]:
         """Return a printable data from `data`."""
 
@@ -147,7 +188,7 @@ class dataSystem:
             dt = dt.strftime("%d/%m/%Y %H:%M:%S")
             list_msg.append((f"[{dt}]", f"[{msg.get("from")}]", f"{msg.get("data")}"))
 
-        if len(list_msg) != 0:
+        if list_msg != []:
             return list_msg
 
         return ["NO MESSAGES"]
@@ -176,6 +217,14 @@ class dataSystem:
 
         return self.database.child(database).get().val() is not None
     
+    def _find_myspace(self) -> None:
+        """Create or find the myspace's user."""
+
+        myspace = self.database.child(self.my_name).get().val()
+
+        if myspace is None:
+            self.database.child(self.my_name).set({"auth": [self.my_name]})
+
     def _find_database(self, with_user: str) -> str:
         """Return a database name where it is a conversation with `with_user`."""
 
@@ -245,6 +294,12 @@ class message:
         dict_msg = self.data._create_dict_data(msg)
         self.data._send(data=dict_msg, database=database, is_msg=True)
 
+    def send_note(self, note: str, myself_name: str) -> None:
+        """Send a note `note` in myself `myself_name`."""
+
+        dict_msg = self.data._create_dict_data(note)
+        self.data._send_note(dict_msg, myself_name)
+
     def sendPublicKey(self, public_key: bytes) -> None:
         """Send PublicKey `public_key` in `rsa_keys` database."""
 
@@ -266,6 +321,16 @@ class message:
 
         return self.data.my_name
     
+    def find_myspace(self) -> None:
+        """Find the user's myspace `myspace_name`."""
+
+        self.data._find_myspace()
+
+    def find_notes_myspace(self, myspace_name: str) -> list[dict]:
+        """Return all the messages from a myspace `myspace`.""" 
+
+        return self.data._get_data_from_myspace(myspace_name)
+
     def find_conversation(self, user: str) -> str:
         """Find the name of the database from user, and create one if not created."""
 
@@ -285,3 +350,8 @@ class message:
         """Return a printable list of messages `messages` (NEED TO BE DECRYPTED BEFORE)."""
 
         return self.data._data_to_msg(messages)
+    
+    def transform_notes(self, notes: list[dict]) -> list[tuple[str, str]]:
+        """Return a printable list of notes `notes` (NEED TO BE DECRYPTED BEFORE)."""
+
+        return self.data._data_to_notes(notes)

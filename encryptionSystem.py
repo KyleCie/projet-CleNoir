@@ -176,6 +176,25 @@ class encryption:
         if isinstance(data, str):
             return b64encode(result).decode()
         return result
+    
+    def encrypt_note(self, data: str) -> str:
+        """encryot the data with the encryption method."""
+
+        if isinstance(data, str):
+            clean_data = data.encode('utf-8')
+        else:
+            clean_data = data
+
+        if not self.rsa.public_key:
+            raise ValueError("La valeur de self.rsa.public_key est None.")
+
+        session_key, _, enc_session_key_me  = self.rsa.encrypt(self.rsa.public_key)
+        nonce, cipher_text, tag = self.aes.encrypt(clean_data, session_key)
+        result = enc_session_key_me + nonce + tag + cipher_text
+
+        if isinstance(data, str):
+            return b64encode(result).decode()
+        return result
 
     @overload # str handler
     def decrypt(self, data: str) -> str: ...
@@ -217,7 +236,7 @@ class encryption:
             if isinstance(msg_data, str):
                 clean_data = b64decode(msg_data)
             else:
-                clean_data = data
+                clean_data = msg
 
             if from_who == me:                                      # if it's from me,
                 clean_data = clean_data[256:]                       # take the first coded key
@@ -229,6 +248,27 @@ class encryption:
             clean_msg["timestamp"] = msg.get("timestamp")
 
             clean_datas.append(clean_msg)
+
+        return clean_datas
+
+    def decrypt_notes_myspace(self, data: list[dict]) -> list[dict]:
+        """Return a decrypted list of the data `data`."""
+
+        clean_datas = []
+
+        for note in data:
+            clean_data = {}
+            note_data = note.get("data")
+
+            if isinstance(note_data, str):
+                clean_note = b64decode(note_data)
+            else:
+                clean_note = note_data
+
+            clean_data["data"] = self.decrypt(clean_note).decode()
+            clean_data["timestamp"] = note.get("timestamp")
+
+            clean_datas.append(clean_data)
 
         return clean_datas
 
