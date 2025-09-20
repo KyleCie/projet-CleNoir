@@ -8,7 +8,9 @@ from os import listdir, getcwd, path
 class file:
 
     def __init__(self):
-
+        
+        print("Starting file system...")
+        print("-> Creating paths...")
         # directorys.
         self.DIRECTORY = getcwd()
         self.FOLDER_DIR = path.join(self.DIRECTORY, "me")
@@ -16,7 +18,9 @@ class file:
         self.data = {}
         self.my_name = ""
         
+        print("-> Opening files...")
         self._open_json()
+        print("File system done.")
     
     def _open_json(self) -> None:
         """open json file."""

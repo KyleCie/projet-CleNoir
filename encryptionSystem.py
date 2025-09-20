@@ -18,14 +18,14 @@ class rsaSystem:
     def __init__(self) -> None:
         
         # directorys.
-        print("-> Creation des chemins d'acces...")
+        print("-> Creating paths...")
         self.DIRECTORY = getcwd()
         self.FOLDER_DIR = path.join(self.DIRECTORY, "pems_files")
         self.PRIVATE_DIR = path.join(self.FOLDER_DIR, "private.pem")
         self.PUBLIC_DIR = path.join(self.FOLDER_DIR, "public.pem")
 
         # RSA keys and passphrase.
-        print("-> Initialisations des variables...")
+        print("-> Init. variables...")
         self.public_key = None
         self.private_key = None
         
@@ -34,15 +34,15 @@ class rsaSystem:
         self.passCode = "test"
 
         # open ( and create ) RSA keys.
-        print("-> Verification des cles RSA...")
+        print("-> Checking RSA keys...")
         if not self._verify_keys_files():
-            print("--> Cles non crees ! Creation...")
+            print("--> Keys don't exist ! Creating a set...")
             self._make_RSA_keys()
-            print("--> Creation termine.")
+            print("--> Created.")
         
-        print("-> Ouverture des fichiers pour acceder au cles...")
+        print("-> Opening files...")
         self._get_RSA_keys()
-        print("-> tout est pret.")
+        print("-> All done.")
 
     def _verify_keys_files(self) -> bool:
         """Verify if the keys files are here."""
@@ -123,7 +123,7 @@ class rsaSystem:
 class aesSystem:
 
     def __init__(self) -> None:
-        print("-> Tout est pret.")
+        print("-> All done.")
 
     def encrypt(self, data: bytes, session_key: bytes) -> tuple[bytes, bytes, bytes]:
         """encrypt data with session_key as the key for the AES system and return the `nonce`, `cipher_text` and `tag`."""
@@ -146,11 +146,11 @@ class encryption:
     def __init__(self) -> None:
         
         # encryption system.
-        print("lancement du systeme RSA...")
+        print("Starting RSA system...")
         self.rsa = rsaSystem()
-        print("lancement du systeme AES...")
+        print("Starting AES system...")
         self.aes = aesSystem()
-        print("le systeme de chiffrement pret.")
+        print("Encryption system done.")
 
     @overload # str handler
     def encrypt(self, data: str, public_key: str) -> str: ...

@@ -158,12 +158,15 @@ class commandSystem:
 class interpreter:
     def __init__(self) -> None:
 
+        print("Starting interpreter system...")
         self.commands = commandSystem()
 
+        print("-> Init. variables...")
         self.traduct_commands: dict[str, str] = {
             "t": "test",
             "c": "contact",
             "m": "myself",
+            "pseudo": "myself",
             "contacts": "contact",
             "clr": "clear",
             "rst": "reset",
@@ -182,6 +185,8 @@ class interpreter:
             "refresh": self.commands._refresh,
             "change": self.commands._change_system
         }
+
+        print("Interpreter system done.")
 
     def find_command(self, command: str) -> Callable:
         """Return a usable command who correspond to `command` else return None."""

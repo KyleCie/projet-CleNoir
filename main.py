@@ -13,14 +13,16 @@ if __name__ == "__main__":
     itptr = interpreter()
     printer = terminal(fhandler)
 
-    example_msg = (["[DATE HEURE]", "[PSEUDO]", "ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz 1234567890 ,?;.:/!"]) # example message for parameters.
+    print("Starting...")
+
+    example_msg = (["[DATE HOUR]", "[PSEUDO]", "ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz 1234567890 ,?;.:/!"]) # example message for parameters.
     myself = msg.get_my_pseudo()    # my own pseudo.
     key_receiver = ""   # public key receiver for the message system.
     cov_reveiver = ""   # conversaton name for the message system.
     #sleep(1)   # TODO: remove this command to activate.
 
     type_cmd = "command"
-    itptr.run("clear")
+    #itptr.run("clear")
 
     while True:
 
@@ -118,14 +120,14 @@ if __name__ == "__main__":
                                 last_msg = encr.decrypt_messages(last_msg, myself)
                                 last_msg = msg.transform_messages(last_msg)
 
-                                printer.print_messages(conversation) # print new conversation (messages).
+                                printer.print_messages(last_msg) # print new conversation (messages).
 
                     type_cmd = "command"    # reput in command system.
 
                 case "CHANGE_MSG_COLOR":
 
                     printer.change_messages_colors(result[1:])
-                    print("EXEMPLE :")
+                    print("RESULT :")
                     printer.print_messages([example_msg])
 
                 case _:     # can't find anything with it.

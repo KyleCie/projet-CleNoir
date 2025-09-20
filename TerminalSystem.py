@@ -8,7 +8,11 @@ from colorama import Fore, Style
 class PrintSystem:
     def __init__(self, messages_parameters: file):
 
+        print("-> Getting parameters...")
+
         self.params = messages_parameters._get_parameters_json()
+
+        print("-> Init. variables...")
 
         self.colors: dict[str, str] = {
             "WHITE": Fore.WHITE,
@@ -46,8 +50,10 @@ class PrintSystem:
 
 class terminal:
     def __init__(self, messages_parameters: file):
-
+        
+        print("Starting printer and terminal system...")
         self.print = PrintSystem(messages_parameters)
+        print("Printer and terminal system done.")
 
     def print_messages(self, messages: list[tuple[str, str, str]]) -> None:
         """Print in the terminal the messages with the parameter's user."""

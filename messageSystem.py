@@ -16,6 +16,7 @@ class dataSystem:
 
     def __init__(self, dataFileHandler: file) -> None:
 
+        print("-> Init. variables...")
         self.dataFile = dataFileHandler
         # data from the file.
         self.data: dict = {}
@@ -41,8 +42,11 @@ class dataSystem:
         # PublicKeys list.
         self.PublicKeys = []
 
+        print("-> Checking files...")
         if self.dataFile._verify_json_files():
+            print("-> Getting data...")
             self.data, self.my_name = self.dataFile._get_data_json()
+            print("-> Connecting to database...")
             self._connect_to_db()
         else:
             exit()
@@ -226,7 +230,9 @@ class message:
 
     def __init__(self, dataFileHandler) -> None:
         
+        print("Starting message and database system...")
         self.data = dataSystem(dataFileHandler)
+        print("Message and database system done.")
 
     def refresh(self) -> None:
         """Refresh the system."""
