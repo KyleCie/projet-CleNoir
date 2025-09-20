@@ -1,14 +1,19 @@
 from encryptionSystem import encryption
 from messageSystem import message
 from UserSystem import interpreter
+from TerminalSystem import terminal
+from dataFileSystem import file
 
 from time import sleep
 
 if __name__ == "__main__":
+    fhandler = file()
     encr = encryption()
-    msg = message()
+    msg = message(fhandler)
     itptr = interpreter()
+    printer = terminal(fhandler)
 
+    example_msg = (["[DATE HEURE]", "[PSEUDO]", "ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz 1234567890 ,?;.:/!"]) # example message for parameters.
     myself = msg.get_my_pseudo()    # my own pseudo.
     key_receiver = ""   # public key receiver for the message system.
     cov_reveiver = ""   # conversaton name for the message system.
@@ -48,6 +53,10 @@ if __name__ == "__main__":
                     print(f"pseudo: {myself}")
                     continue
 
+                case "REFRESH":
+                    print("refreshing...")
+                    msg.refresh()
+
                 case _:
                     continue
 
@@ -57,6 +66,14 @@ if __name__ == "__main__":
 
                 case "CONNECT_CONV":    # create and initiate all the parameters and variables for a conversation.
                     print(f"Finding a conversation database with '{result[1]}'...")
+
+                    contacts = msg.get_contact()
+
+                    print(contacts)
+
+                    if result[1] not in contacts:
+                        print(f"User : '{result[1]}' doesn't exist !")
+                        continue
 
                     cov_reveiver = msg.find_conversation(result[1]) # find user conv with the "_connect_conversation" result.
                     key_receiver = msg.get_PublicKey_from(result[1]) # get public key from the receiver.
@@ -72,14 +89,13 @@ if __name__ == "__main__":
                     conversation = encr.decrypt_messages(conversation, myself)
                     conversation = msg.transform_messages(conversation)                    
 
-                    for raw_msg in conversation:    # print conversation.
-                        print(raw_msg)
+                    printer.print_messages(conversation) # print conversation
                     
                     while True:     # message system.
-                        message = input(f"[{type_cmd}] >>> ")
+                        raw_msg = input(f"[{type_cmd}] >>> ")
                         itptr.run("clearline")
 
-                        match message:
+                        match raw_msg:
 
                             case "$exit":   # exit.
                                 break
@@ -92,7 +108,7 @@ if __name__ == "__main__":
 
                             case _:         # send.
 
-                                encr_msg = encr.encrypt(message, key_receiver)
+                                encr_msg = encr.encrypt(raw_msg, key_receiver)
                                 msg.send(encr_msg, cov_reveiver)
 
                                 last_msg = msg.find_messages(cov_reveiver)
@@ -102,10 +118,15 @@ if __name__ == "__main__":
                                 last_msg = encr.decrypt_messages(last_msg, myself)
                                 last_msg = msg.transform_messages(last_msg)
 
-                                for raw_msg in last_msg:    # print new conversation (messages).
-                                    print(raw_msg)
+                                printer.print_messages(conversation) # print new conversation (messages).
 
                     type_cmd = "command"    # reput in command system.
+
+                case "CHANGE_MSG_COLOR":
+
+                    printer.change_messages_colors(result[1:])
+                    print("EXEMPLE :")
+                    printer.print_messages([example_msg])
 
                 case _:     # can't find anything with it.
                     continue

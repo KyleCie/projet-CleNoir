@@ -1,6 +1,6 @@
 
 # Styling functions calls.
-from typing import Callable
+from typing import Callable, Literal
 
 # To clear the terminal.
 from os import system
@@ -41,7 +41,7 @@ class commandSystem:
 
         print("test !")
 
-    def _myself(self, *args) -> str:
+    def _myself(self, *args) -> Literal["SAY_PSEUDO"]:
         """Return a command to the main to get your pseudo."""
 
         return "SAY_PSEUDO"
@@ -52,11 +52,47 @@ class commandSystem:
         to_say: str = self._clean_command(command=command, length_words=-1, start_pos=1)
         print(to_say)
 
-    def _find_contacts(self, *args) -> str:
+    def _find_contacts(self, *args) -> Literal["FIND_CONTACTS"]:
         """Return a command to the main to search contacts."""
 
         return "FIND_CONTACTS"
   
+    def _refresh(self, *args) -> Literal["REFRESH"]:
+        """Return a command to the main to refresh."""
+
+        return "REFRESH"
+    
+    def _change_system(self, command: str, *args) -> tuple[Literal["CHANGE_MSG_COLOR"], str, str, str] | None:
+        """change parameter's user."""
+
+        clean_cmd = self._clean_command(command, -1, 1)
+        clean_cmd = self._to_tuple_command(clean_cmd)
+
+        if len(clean_cmd) != 0:
+
+            match clean_cmd[0]:
+
+                case "message":
+                    
+                    if clean_cmd[1] == "color":
+                        if clean_cmd[-1] != "color":
+
+                            return ("CHANGE_MSG_COLOR", clean_cmd[2].upper(), clean_cmd[3].upper(), clean_cmd[4].upper())
+
+                        print("Colors available : WHITE, BLACK, YELLOW, GREEN, RED, PURPLE.")
+                        color1 = input("Color for informations (empty = don't change) : ").upper()
+                        color2 = input("Color for name (empty = don't change) : ").upper()
+                        color3 = input("Color for content (empty = don't change) : ").upper()
+
+                        return ("CHANGE_MSG_COLOR", color1, color2, color3)
+
+                case _:
+                    self._error_not_found(f"change -> {clean_cmd[0]}")
+                    return
+
+        self._error_need_parameters("change", "WHAT_TO_CHANGE")
+        return
+
     def _reset_system(self, command: str, *args) -> str | None:
         """The reset system, return a command to the main."""
 
@@ -98,7 +134,7 @@ class commandSystem:
             return
     
         if len(to_who) == 0:
-            print("Need a parameter after 'connect'.")
+            self._error_need_parameters("connect", "TO_WHO")
             return
     
         return ("CONNECT_CONV", to_who[0])
@@ -106,7 +142,7 @@ class commandSystem:
     def _error_need_parameters(self, command: str, *args) -> None:
         """When a command need a parameters."""
 
-        print(f"Error with '{command} : need parameters : {args} .")
+        print(f"Error with '{command}' : need parameters : {args} .")
 
     def _error_not_found(self, command: str, *args) -> None:
         """When no commands found for `command`."""
@@ -131,6 +167,7 @@ class interpreter:
             "contacts": "contact",
             "clr": "clear",
             "rst": "reset",
+            "r": "refresh"
         }
 
         self.auth_commands: dict[str, Callable] = {
@@ -141,7 +178,9 @@ class interpreter:
             "say": self.commands._say,
             "reset": self.commands._reset_system,
             "connect": self.commands._connect_conversation,
-            "clearline": self.commands._clear_line_terminal
+            "clearline": self.commands._clear_line_terminal,
+            "refresh": self.commands._refresh,
+            "change": self.commands._change_system
         }
 
     def find_command(self, command: str) -> Callable:

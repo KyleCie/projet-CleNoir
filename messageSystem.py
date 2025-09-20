@@ -1,9 +1,6 @@
 
-# files and directory.
-from os import listdir, getcwd, path
-
-# json and dict handler.
-from json import dump, load
+# get the class type
+from dataFileSystem import file
 
 # firebase messaging handler.
 import pyrebase
@@ -17,13 +14,9 @@ from typing import overload, Union
 
 class dataSystem:
 
-    def __init__(self) -> None:
-        
-        # directorys.
-        self.DIRECTORY = getcwd()
-        self.FOLDER_DIR = path.join(self.DIRECTORY, "me")
-        self.DATA_DIR = path.join(self.FOLDER_DIR, "data.json")
+    def __init__(self, dataFileHandler: file) -> None:
 
+        self.dataFile = dataFileHandler
         # data from the file.
         self.data: dict = {}
         # the pseudo of the user.
@@ -48,46 +41,19 @@ class dataSystem:
         # PublicKeys list.
         self.PublicKeys = []
 
-        if self._verify_json_files():
-            self._get_data_json()
+        if self.dataFile._verify_json_files():
+            self.data, self.my_name = self.dataFile._get_data_json()
             self._connect_to_db()
         else:
             exit()
     
-    def _verify_json_files(self) -> bool:
-        """Verify if the data file is here."""
-
-        files = listdir(self.FOLDER_DIR)
-        return "data.json" in files
-    
-    def _get_data_json(self) -> None:
-        """Get the data from data.json"""
-
-        with open(self.DATA_DIR, "r", encoding="utf-8") as file:
-            self.data = load(file)
-
-        self.my_name = self.data.get("me", "unknown")
-
-        if self.my_name == "unknown":
-            exit()
-
-    def _store_data_json(self) -> None:
-        """Store the `self.data` into data.json"""
-
-        with open(self.DATA_DIR, "w", encoding="utf-8") as file:
-            dump(self.data, file)
-
     def _connect_to_db(self) -> None:
         """Create an instance database."""
 
         self.firebase = pyrebase.initialize_app(self.db_infos)
         self.database = self.firebase.database()
 
-        public_keys = self.database.child("rsa-keys").get()
-        
-        if public_keys.each():
-            for msg in public_keys.each():
-                self.PublicKeys.append(msg.val())
+        self.PublicKeys = self._get_RSA_keys()
 
     def _get_RSA_keys(self) -> list[dict]:
         """Get the public RSA keys from database."""
@@ -95,7 +61,7 @@ class dataSystem:
         if not self.database:
             exit()
 
-        rsa_messages = self.database.child("RSA").get()
+        rsa_messages = self.database.child("rsa-keys").get()
         rsa_messages = rsa_messages.each()
 
         messages: list[dict] = []
@@ -103,10 +69,15 @@ class dataSystem:
         if rsa_messages:
 
             for rsa in rsa_messages:
-                messages.append(rsa)
+                messages.append(rsa.val())
 
         return messages
     
+    def _refresh(self) -> None:
+        """Refresh the public keys."""
+        
+        self.PublicKeys = self._get_RSA_keys()
+
     def _send(self, data: dict, database: str, is_msg: bool = False) -> None:
         """Send a data `data` to the child database named `database`"""
 
@@ -119,7 +90,7 @@ class dataSystem:
             if msg_link == "" or msg_link == "unknown":
                 result = self.database.child(database).push(data)
                 self.data["rsa_msg"] = result["name"]
-                self._store_data_json()
+                self.dataFile._store_data_json(self.data)
 
             else:
                 self.database.child(database).child(msg_link).set(data)
@@ -162,15 +133,15 @@ class dataSystem:
         
         return [messages[-1].val()]
     
-    def _data_to_msg(self, data: list[dict]) -> list[str]:
+    def _data_to_msg(self, data: list[dict]) -> list[tuple[str, str, str]]:
         """Return a printable data from `data`."""
 
-        list_msg: list[str] = []
+        list_msg: list[tuple[str, str]] = []
 
         for msg in data:
             dt = datetime.fromtimestamp(msg.get("timestamp"))
             dt = dt.strftime("%d/%m/%Y %H:%M:%S")
-            list_msg.append(f"[{dt}][{msg.get("from")}] {msg.get("data")}")
+            list_msg.append((f"[{dt}]", f"[{msg.get("from")}]", f"{msg.get("data")}"))
 
         if len(list_msg) != 0:
             return list_msg
@@ -253,9 +224,14 @@ class dataSystem:
 
 class message:
 
-    def __init__(self) -> None:
+    def __init__(self, dataFileHandler) -> None:
         
-        self.data = dataSystem()
+        self.data = dataSystem(dataFileHandler)
+
+    def refresh(self) -> None:
+        """Refresh the system."""
+
+        self.data._refresh()
     
     def send(self, msg: str | bytes, database: str) -> None:
         """Send a message `msg` in `message` database."""
@@ -299,8 +275,7 @@ class message:
 
         return self.data._get_data_from_database(database, True)
 
-    def transform_messages(self, messages: list[dict]) -> list[str]:
+    def transform_messages(self, messages: list[dict]) -> list[tuple[str, str, str]]:
         """Return a printable list of messages `messages` (NEED TO BE DECRYPTED BEFORE)."""
 
-        data = self.data._data_to_msg(messages)
-        return data
+        return self.data._data_to_msg(messages)

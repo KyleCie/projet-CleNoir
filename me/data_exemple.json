@@ -1,3 +1,9 @@
 {
-    "me": "YOUR_PSEUDO"
+    "me": "YOUR_PSEUDO",
+    "rsa_msg": "",
+    "parameters": {
+        "date_info_color": "WHITE",
+        "name_info_color": "WHITE",
+        "content_info_color": "WHITE"
+    }
 }
