@@ -50,7 +50,7 @@ class file:
         self.my_name = self.data.get("me", "unknown")
 
         if self.my_name == "unknown":
-            exit()
+            raise ValueError("The value of self.my_name is None.")
 
     def _get_db_infos(self) -> dict:
         """Get the dict of the db infos."""
@@ -77,4 +77,4 @@ class file:
         """Verify if the data file is here."""
 
         files = listdir(self.FOLDER_DIR)
-        return "data.json" in files
+        return "data.json" in files and "db.txt" in files

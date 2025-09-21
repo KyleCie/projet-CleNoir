@@ -86,11 +86,11 @@ class rsaSystem:
         """return the public key."""
 
         if self.public_key is None:
-            exit()
+            raise ValueError("The value of rsa.public_key is None.")
 
         return self.public_key.export_key()
 
-    def encrypt(self, reciever_key: RSA.RsaKey | str) -> tuple[bytes, bytes, bytes]:
+    def encrypt_message(self, reciever_key: RSA.RsaKey | str) -> tuple[bytes, bytes, bytes]:
         """create a session_key and enc_session_key from the public key: `reciever_key`."""
 
         if isinstance(reciever_key, str):
@@ -108,12 +108,22 @@ class rsaSystem:
         enc_session_key_me = cipher_rsa_me.encrypt(session_key)
 
         return (session_key, enc_session_key_reciever, enc_session_key_me)
-    
+
+    def encrypt_note(self) -> tuple[bytes, bytes, bytes]:
+        """create a session_key and enc_session_key from the public key: `reciever_key`."""
+
+        session_key = get_random_bytes(16)
+
+        cipher_rsa_me = PKCS1_OAEP.new(self.public_key)
+        enc_session_key_me = cipher_rsa_me.encrypt(session_key)
+
+        return (session_key, enc_session_key_me)
+
     def decrypt(self, enc_session_key: bytes) -> bytes:
         """retrieve session_key from enc_session_key with the private key. `enc_session_key`."""
 
         if self.private_key is None:
-            exit()
+            raise ValueError("The value of rsa.public_key is None.")
 
         cipher_rsa = PKCS1_OAEP.new(self.private_key)
         session_key = cipher_rsa.decrypt(enc_session_key)
@@ -167,9 +177,9 @@ class encryption:
             clean_data = data
         
         if not self.rsa.public_key:
-            raise ValueError("La valeur de self.rsa.public_key est None.")
+            raise ValueError("The value of rsa.public_key is None.")
 
-        session_key, enc_session_key_re, enc_session_key_me  = self.rsa.encrypt(public_key)
+        session_key, enc_session_key_re, enc_session_key_me  = self.rsa.encrypt_message(public_key)
         nonce, cipher_text, tag = self.aes.encrypt(clean_data, session_key)
         result = enc_session_key_re + enc_session_key_me + nonce + tag + cipher_text    # crypted key for receiver + me, ...
 
@@ -186,9 +196,9 @@ class encryption:
             clean_data = data
 
         if not self.rsa.public_key:
-            raise ValueError("La valeur de self.rsa.public_key est None.")
+            raise ValueError("The value of rsa.public_key is None.")
 
-        session_key, _, enc_session_key_me  = self.rsa.encrypt(self.rsa.public_key)
+        session_key, enc_session_key_me  = self.rsa.encrypt_note()
         nonce, cipher_text, tag = self.aes.encrypt(clean_data, session_key)
         result = enc_session_key_me + nonce + tag + cipher_text
 
@@ -209,6 +219,9 @@ class encryption:
             clean_data = b64decode(data)
         else:
             clean_data = data
+
+        if len(clean_data) < 288:
+            raise ValueError(f"The variable clean_data is less than 288 bytes, -> {len(clean_data)}.")
 
         es_key = clean_data[0:256]    # 2048 bits enc_session_key
         nonce = clean_data[256:272]   # 16 bits nonce
@@ -237,6 +250,10 @@ class encryption:
                 clean_data = b64decode(msg_data)
             else:
                 clean_data = msg
+
+            if len(clean_data) < 512:
+                raise ValueError(f"The variable clean_data is less than 512 bytes, -> {len(clean_data)}.")
+
 
             if from_who == me:                                      # if it's from me,
                 clean_data = clean_data[256:]                       # take the first coded key
@@ -279,26 +296,6 @@ class encryption:
     
     def reset_keys(self, sure: bool = False) -> None:
         """Reset the set keys for the RSA system, need to put `sure` to True."""
+
         if sure:
             self.rsa._make_RSA_keys()
-
-if __name__ == "__main__":              # testing system (OUTDATED).
-
-    en = encryption()
-    
-    phrase = input("test : ")
-    bin_phrase = phrase.encode('utf-8')
-    
-    print("--- AS STR ---")
-    encode = en.encrypt(phrase)
-    decode = en.decrypt(encode)
-
-    print(encode)
-    print(decode)
-    
-    print("--- AS BIN ---")
-    encode = en.encrypt(phrase)
-    decode = en.decrypt(encode)
-
-    print(encode)
-    print(decode)

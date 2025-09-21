@@ -40,7 +40,7 @@ class dataSystem:
             print("-> Connecting to database...")
             self._connect_to_db()
         else:
-            exit()
+            raise FileNotFoundError("the infos fils don't exist !")
     
     def _connect_to_db(self) -> None:
         """Create an instance database."""
@@ -54,7 +54,7 @@ class dataSystem:
         """Get the public RSA keys from database."""
 
         if not self.database:
-            exit()
+            raise ValueError("The value of database is None.")
 
         rsa_messages = self.database.child("rsa-keys").get()
         rsa_messages = rsa_messages.each()
@@ -77,7 +77,7 @@ class dataSystem:
         """Send data `data` to the child database."""
 
         if not self.database:
-            exit()
+            raise ValueError("The value of database is None.")
 
         self.database.child(self.my_name).child(myself_name).push(data)
 
@@ -85,7 +85,7 @@ class dataSystem:
         """Send a data `data` to the child database named `database`"""
 
         if not self.database:
-            exit()
+            raise ValueError("The value of database is None.")
 
         if database == "rsa-keys":
             msg_link = self.data.get("rsa_msg", "unknown")
@@ -110,7 +110,7 @@ class dataSystem:
         """Return the raw data from myspace `myspace`."""
 
         if not self.database:
-            exit()
+            raise ValueError("The value of database is None.")
 
         notes = self.database.child(self.my_name).child(name).get()
         notes = notes.each()
@@ -135,7 +135,7 @@ class dataSystem:
         """Return the raw data from database `database`."""
 
         if not self.database:
-            exit()
+            raise ValueError("The value of database is None.")
 
         messages = self.database.child(database).child("messages").get()
         messages = messages.each()

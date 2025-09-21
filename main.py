@@ -48,7 +48,7 @@ if __name__ == "__main__":
                     for c in contacts:
                         if c == myself:
                             print(f"-> {c}")
-                            
+
                     continue
 
                 case "RESET_RSA_KEYS":  # reset the rsa keys.
@@ -67,7 +67,7 @@ if __name__ == "__main__":
 
                 case "EXIT":
                     print("Exiting...")
-                    exit()
+                    break
 
                 case _:
                     continue
@@ -197,3 +197,5 @@ if __name__ == "__main__":
 
                 case _:     # can't find anything with it.
                     continue
+    
+    # while exit here

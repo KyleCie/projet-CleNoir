@@ -192,8 +192,7 @@ class commandSystem:
     def _error_systemCommand_not_found(self, command: str, *args) -> None:
         """When the system do a wrong call. (weird!)"""
 
-        print(f"ERROR !!! System call {command} is not found (have to exit) !")
-        exit()
+        raise ValueError(f"ERROR !!! System call {command} is not found (have to exit) !")
 
 class interpreter:
     def __init__(self) -> None:
