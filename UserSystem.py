@@ -61,6 +61,11 @@ class commandSystem:
         """Return a command to the main to refresh."""
 
         return "REFRESH"
+
+    def _notifications(self, command:str, *args) -> Literal["NOTIFICATIONS"]:
+        """Return a command to the main to get the notifications."""
+
+        return "NOTIFICATIONS"
     
     def _exit(self, *args) -> Literal["EXIT"]:
         """Return a command to the main to exit the program."""
@@ -126,6 +131,24 @@ class commandSystem:
 
                         return ("CHANGE_NOTES_COLOR", color1, color2)
 
+                case "notif":
+
+                    if len(clean_cmd) == 1:
+                        self._error_need_parameters("change", "WHAT_IN_NOTIF")
+                        return
+
+                    if clean_cmd[1] == "color":
+                        if clean_cmd[-1] != "color":
+
+                            return ("CHANGE_NOTIFS_COLOR", clean_cmd[2].upper(), clean_cmd[3].upper(), clean_cmd[4].upper())
+
+                        print("Colors available : WHITE, BLACK, YELLOW, GREEN, RED, PURPLE.")
+                        color1 = input("Color for informations (empty = don't change) : ").upper()
+                        color2 = input("Color for name (empty = don't change) : ").upper()
+                        color3 = input("Color for content (empty = don't change) : ").upper()
+
+                        return ("CHANGE_NOTIFS_COLOR", color1, color2, color3)
+
                 case _:
                     self._error_not_found(f"change -> {clean_cmd[0]}")
                     return
@@ -156,6 +179,9 @@ class commandSystem:
                     print("-> Command canceled <-")
                     return
         
+                case "notif":
+                    return "RESET_NOTIF"
+
                 case _:
                     self._error_not_found(f"reset -> {clean_cmd[0]}")
                     return
@@ -209,7 +235,9 @@ class interpreter:
             "contacts": "contact",
             "clr": "clear",
             "rst": "reset",
-            "r": "refresh"
+            "r": "refresh",
+            "n": "notif",
+            "notifs": "notif"
         }
 
         self.auth_commands: dict[str, Callable] = {
@@ -224,6 +252,7 @@ class interpreter:
             "refresh": self.commands._refresh,
             "change": self.commands._change_system,
             "myspace": self.commands._myspace_system,
+            "notif": self.commands._notifications,
             "exit": self.commands._exit
         }
 

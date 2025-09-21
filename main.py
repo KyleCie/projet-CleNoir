@@ -52,10 +52,15 @@ if __name__ == "__main__":
                     continue
 
                 case "RESET_RSA_KEYS":  # reset the rsa keys.
-                    encr.reset_keys()
+                    encr.reset_keys() # TODO: put to True the `sure` to really reset.
                     key = encr.public_key_RSA()
                     msg.sendPublicKey(key)
                     continue
+
+                case "RESET_NOTIF":
+                    print("Deleting notifs...")
+                    msg.delete_notifications()
+                    print("Done.")
 
                 case "SAY_PSEUDO":
                     print(f"pseudo: {myself}")
@@ -64,6 +69,12 @@ if __name__ == "__main__":
                 case "REFRESH":
                     print("refreshing...")
                     msg.refresh()
+
+                case "NOTIFICATIONS":
+                    print("Getting the notifications...")
+                    notifs = msg.get_notifications()
+                    itptr.run("clearline")
+                    printer.print_notifications(notifs)
 
                 case "EXIT":
                     print("Exiting...")
@@ -77,18 +88,17 @@ if __name__ == "__main__":
             match result[0]:
 
                 case "CONNECT_CONV":    # create and initiate all the parameters and variables for a conversation.
-                    print(f"Finding a conversation database with '{result[1]}'...")
+                    receiver = result[1]
+                    print(f"Finding a conversation database with '{receiver}'...")
 
                     contacts = msg.get_contact()
 
-                    print(contacts)
-
-                    if result[1] not in contacts:
-                        print(f"User : '{result[1]}' doesn't exist !")
+                    if receiver not in contacts:
+                        print(f"User : '{receiver}' doesn't exist !")
                         continue
 
-                    cov_reveiver = msg.find_conversation(result[1]) # find user conv with the "_connect_conversation" result.
-                    key_receiver = msg.get_PublicKey_from(result[1]) # get public key from the receiver.
+                    cov_reveiver = msg.find_conversation(receiver) # find user conv with the "_connect_conversation" result.
+                    key_receiver = msg.get_PublicKey_from(receiver) # get public key from the receiver.
 
                     print(f"'{cov_reveiver}' found.")
                     print("Connecting...")
@@ -109,11 +119,23 @@ if __name__ == "__main__":
 
                         match raw_msg:
 
-                            case "$exit":   # exit.
+                            case "$exit" | "$e":   # exit.
                                 break
 
-                            case "$e":      # exit.
-                                break
+                            case "$reload" | "$r": # reload / find new messages.
+
+                                last_msg = msg.find_messages(cov_reveiver)
+                                last_msg = last_msg[last_cov_index:]  # get the delta messages (new messages).
+
+                                if last_msg == []:
+                                    continue
+
+                                last_cov_index += len(last_msg)     # reindexing last messages.
+
+                                last_msg = encr.decrypt_messages(last_msg, myself)
+                                last_msg = msg.transform_messages(last_msg)
+
+                                printer.print_messages(last_msg) # print new conversation (messages).
 
                             case "":        # empty.
                                 continue
@@ -121,7 +143,7 @@ if __name__ == "__main__":
                             case _:         # send.
 
                                 encr_msg = encr.encrypt(raw_msg, key_receiver)
-                                msg.send(encr_msg, cov_reveiver)
+                                msg.send(encr_msg, cov_reveiver, receiver)
 
                                 last_msg = msg.find_messages(cov_reveiver)
                                 last_msg = last_msg[last_cov_index:]  # get the delta messages (new messages).
@@ -142,13 +164,12 @@ if __name__ == "__main__":
                     msg.find_myspace()
                     print("Getting the notes...")
 
-                    type_cmd = "message"
+                    type_cmd = "note"
                     itptr.run("clear")
 
                     notes = msg.find_notes_myspace(my_space)
                     notes = encr.decrypt_notes_myspace(notes)
                     notes = msg.transform_notes(notes)
-                    last_note_index = len(notes)
 
                     printer.print_notes(notes)
 
@@ -158,10 +179,7 @@ if __name__ == "__main__":
 
                         match raw_note:
 
-                            case "$exit":   # exit.
-                                break
-
-                            case "$e":      # exit.
+                            case "$exit" | "$e":   # exit.
                                 break
 
                             case "":        # empty.
@@ -173,8 +191,7 @@ if __name__ == "__main__":
                                 msg.send_note(encr_note, my_space)
 
                                 last_note = msg.find_notes_myspace(my_space)
-                                last_note = last_note[last_note_index:]  # get the delta notes (new notes).
-                                last_note_index += len(last_note)     # reindexing last notes.
+                                last_note = [last_note[-1]] # get the delta notes (new notes).
 
                                 last_note = encr.decrypt_notes_myspace(last_note)
                                 last_note = msg.transform_notes(last_note)
@@ -194,6 +211,12 @@ if __name__ == "__main__":
                     printer.change_notes_colors(result[1:])
                     print("RESULT :")
                     printer.print_notes([example_note])
+
+                case "CHANGE_NOTIFS_COLOR": # change colors notifs parameters.
+
+                    printer.change_notifications_colors(result[1:])
+                    print("RESULT :")
+                    printer.print_notifications([example_msg])
 
                 case _:     # can't find anything with it.
                     continue

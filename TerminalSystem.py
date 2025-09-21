@@ -39,6 +39,14 @@ class PrintSystem:
         self.note_info_color = self.colors.get(self.note_info_color)
         self.note_content_color = self.colors.get(self.note_content_color)
 
+        self.notif_info_color = self.params.get("notif_info_color", "WHITE")
+        self.notif_name_color = self.params.get("notif_name_color", "WHITE")
+        self.notif_content_color = self.params.get("notif_content_color", "WHITE")
+
+        self.notif_info_color = self.colors.get(self.notif_info_color)
+        self.notif_name_color = self.colors.get(self.notif_name_color)
+        self.notif_content_color = self.colors.get(self.notif_content_color)
+
     def _change_msg_colors(self, colors: tuple[str, str, str]) -> None:
         """Change messages colors."""
 
@@ -46,11 +54,18 @@ class PrintSystem:
         self.name_color = self.colors.get(colors[1], self.name_color)
         self.content_color = self.colors.get(colors[2], self.content_color)
 
-    def _chang_notes_colors(self, colors: tuple[str, str]) -> None:
+    def _change_notes_colors(self, colors: tuple[str, str]) -> None:
         """Change notes colors."""
 
         self.note_info_color = self.colors.get(colors[0], self.note_info_color)
         self.note_content_color = self.colors.get(colors[1], self.note_content_color)
+
+    def change_notifs_colors(self, colors: tuple[str, str, str]) -> None:
+        """Change notifs colors."""
+
+        self.notif_info_color = self.colors.get(colors[0], self.notif_info_color)
+        self.notif_notif_color = self.colors.get(colors[1], self.notif_name_color)
+        self.notif_content_color = self.colors.get(colors[2], self.notif_content_color)
 
     def _print_notes(self, notes: list[tuple[str, str]]) -> None:
         """Print in the terminal the notes."""
@@ -76,6 +91,19 @@ class PrintSystem:
         
         print(f"{self.info_color}{messages[-1][0]}{self.name_color}{messages[-1][1]} {self.content_color}{messages[-1][2]}{Style.RESET_ALL}")
 
+        
+    def _print_notifs(self, notifs: list[tuple[str, str, str]]) -> None:
+        """Print in the terminal the notifs."""
+
+        if notifs == ["NO NOTIFS"]:
+            print(f"{self.notif_info_color}NO NOTIFS{Style.RESET_ALL}")
+            return
+
+        for notif in notifs[:-1]:
+            print(f"{self.notif_info_color}{notif[0]}{self.notif_name_color}{notif[1]} {self.notif_content_color}{notif[2]}")
+
+        print(f"{self.notif_info_color}{notifs[-1][0]}{self.notif_name_color}{notifs[-1][1]} {self.notif_content_color}{notifs[-1][2]}{Style.RESET_ALL}")
+
 class terminal:
     def __init__(self, messages_parameters: file):
         
@@ -93,12 +121,22 @@ class terminal:
 
         self.print._print_messages(messages)
 
+    def print_notifications(self, notifications: list[tuple[str, str, str]]) -> None:
+        """Print in the terminal the notifications with the parameter's user."""
+
+        self.print._print_notifs(notifications)
+
     def change_notes_colors(self, colors: tuple[str, str]) -> None:
         """Change parameters for notes colors."""
 
-        self.print._chang_notes_colors(colors)
+        self.print._change_notes_colors(colors)
 
     def change_messages_colors(self, colors: tuple[str, str, str]) -> None:
         """Change parameters for messages colors."""
 
         self.print._change_msg_colors(colors)
+
+    def change_notifications_colors(self, colors: tuple[str, str, str]) -> None:
+        """Change parameters for notifications colors."""
+
+        self.print.change_notifs_colors(colors)
