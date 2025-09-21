@@ -76,6 +76,11 @@ if __name__ == "__main__":
                     itptr.run("clearline")
                     printer.print_notifications(notifs)
 
+                case "SAVE_COLORS":
+                    print("Saving colors...")
+                    printer.save_colors()
+                    print("Done.")
+
                 case "EXIT":
                     print("Exiting...")
                     break

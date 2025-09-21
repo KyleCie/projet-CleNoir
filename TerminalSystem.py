@@ -10,6 +10,7 @@ class PrintSystem:
 
         print("-> Getting parameters...")
 
+        self.file = messages_parameters
         self.params = messages_parameters._get_parameters_json()
 
         print("-> Init. variables...")
@@ -91,7 +92,6 @@ class PrintSystem:
         
         print(f"{self.info_color}{messages[-1][0]}{self.name_color}{messages[-1][1]} {self.content_color}{messages[-1][2]}{Style.RESET_ALL}")
 
-        
     def _print_notifs(self, notifs: list[tuple[str, str, str]]) -> None:
         """Print in the terminal the notifs."""
 
@@ -103,6 +103,22 @@ class PrintSystem:
             print(f"{self.notif_info_color}{notif[0]}{self.notif_name_color}{notif[1]} {self.notif_content_color}{notif[2]}")
 
         print(f"{self.notif_info_color}{notifs[-1][0]}{self.notif_name_color}{notifs[-1][1]} {self.notif_content_color}{notifs[-1][2]}{Style.RESET_ALL}")
+
+    def _save_colors(self) -> None:
+        """Save the colors."""
+
+        colors_list = [self.info_color, self.name_color, self.content_color,
+                        self.note_info_color, self.note_content_color,
+                        self.notif_info_color, self.notif_name_color, self.notif_content_color]
+        
+        clean_colors = []
+
+        for color in colors_list:
+
+            clean_color = next((k for k, v in self.colors.items() if v == color), None)
+            clean_colors.append(clean_color)
+
+        self.file._save_colors(clean_colors)
 
 class terminal:
     def __init__(self, messages_parameters: file):
@@ -140,3 +156,8 @@ class terminal:
         """Change parameters for notifications colors."""
 
         self.print.change_notifs_colors(colors)
+
+    def save_colors(self) -> None:
+        """Return the colors parameters to save."""
+
+        self.print._save_colors()

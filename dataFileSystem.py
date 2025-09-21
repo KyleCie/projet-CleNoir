@@ -68,6 +68,15 @@ class file:
         with open(self.DATA_DIR, "w", encoding="utf-8") as file:
             dump(data, file, indent=4)
 
+    def _save_colors(self, colors: list[str]) -> None:
+        """Change and save colors parameters."""
+
+        json_colors = self.data.get("parameters")
+        new_json_colors = {k: colors[i] for i, k in enumerate(json_colors)}
+        self.data["parameters"] = new_json_colors
+
+        self._store_data_json(self.data)
+
     def _get_parameters_json(self) -> dict:
         """Return the parameter's user from data.json."""
 

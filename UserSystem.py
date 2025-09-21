@@ -188,6 +188,26 @@ class commandSystem:
 
         self._error_need_parameters(command, "WHAT_TO_RESET")
   
+    def _save_system(self, command: str, *args) -> str | None:
+        """Return a command to the main to save parameter's user."""
+
+        clean_cmd = self._clean_command(command, -1, 1)
+        clean_cmd = self._to_tuple_command(clean_cmd)
+
+        if len(clean_cmd) != 0:
+
+            match clean_cmd[0]:
+
+                case "color" | "colors":
+                    
+                    return "SAVE_COLORS"
+                
+                case _:
+                    self._error_not_found(f"save -> {clean_cmd[0]}")
+                    return
+
+        self._error_need_parameters(command, "WHAT_TO_SAVE")
+
     def _connect_conversation(self, command: str, *args) -> tuple | None:
         """The system to connect to a conversation (database), return a command to the main."""
 
@@ -253,6 +273,7 @@ class interpreter:
             "change": self.commands._change_system,
             "myspace": self.commands._myspace_system,
             "notif": self.commands._notifications,
+            "save": self.commands._save_system,
             "exit": self.commands._exit
         }
 
