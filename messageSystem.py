@@ -24,16 +24,7 @@ class dataSystem:
         self.my_name: str = ""
 
         # database informations.
-        # TODO: put this below in a json file and use an encryption system. (For more security.)
-        self.db_infos = {
-            "apiKey": "AIzaSyDscH9QK75IX6PlwfWN6MFg5xISWd0ckcU",
-            "authDomain": "aesrsa-db.firebaseapp.com",
-            "databaseURL": "https://aesrsa-db-default-rtdb.europe-west1.firebasedatabase.app",
-            "projectId": "aesrsa-db",
-            "storageBucket": "aesrsa-db.firebasestorage.app",
-            "messagingSenderId": "273047937386",
-            "appId": "1:273047937386:web:ff3f776d80ed0d73434513"
-        }
+        self.db_infos = self.dataFile._get_db_infos()
 
         # database instance.
         self.database = None

@@ -4,6 +4,8 @@
     "parameters": {
         "date_info_color": "WHITE",
         "name_info_color": "WHITE",
-        "content_info_color": "WHITE"
+        "content_info_color": "WHITE",
+        "note_info_color": "YELLOW",
+        "note_content_color": "GREEN"
     }
 }
