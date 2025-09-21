@@ -93,6 +93,10 @@ class commandSystem:
 
                 case "message":
                     
+                    if len(clean_cmd) == 1:
+                        self._error_need_parameters("change", "WHAT_IN_MESSAGE")
+                        return
+
                     if clean_cmd[1] == "color":
                         if clean_cmd[-1] != "color":
 
@@ -107,6 +111,10 @@ class commandSystem:
 
                 case "note":
                     
+                    if len(clean_cmd) == 1:
+                        self._error_need_parameters("change", "WHAT_IN_NOTE")
+                        return
+
                     if clean_cmd[1] == "color":
                         if clean_cmd[-1] != "color":
 

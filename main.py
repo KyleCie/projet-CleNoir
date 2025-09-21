@@ -44,8 +44,11 @@ if __name__ == "__main__":
                 case "FIND_CONTACTS":   # find the contact in the system.
                     contacts = msg.get_contact()
                     print("Contacts :")
+
                     for c in contacts:
-                        print(f"-> {c}")
+                        if c == myself:
+                            print(f"-> {c}")
+                            
                     continue
 
                 case "RESET_RSA_KEYS":  # reset the rsa keys.
