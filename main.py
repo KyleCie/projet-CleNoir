@@ -9,9 +9,9 @@ from time import sleep
 if __name__ == "__main__":
     fhandler = file()
     encr = encryption()
-    msg = message(fhandler)
-    itptr = interpreter()
     printer = terminal(fhandler)
+    msg = message(fhandler, encr, printer)
+    itptr = interpreter()
 
     print("Starting...")
 
@@ -46,7 +46,7 @@ if __name__ == "__main__":
                     print("Contacts :")
 
                     for c in contacts:
-                        if c == myself:
+                        if c != myself:
                             print(f"-> {c}")
 
                     continue
@@ -58,7 +58,7 @@ if __name__ == "__main__":
                     continue
 
                 case "RESET_NOTIF":
-                    print("Deleting notifs...")
+                    print("Deleting the notifications...")
                     msg.delete_notifications()
                     print("Done.")
 
@@ -69,6 +69,7 @@ if __name__ == "__main__":
                 case "REFRESH":
                     print("refreshing...")
                     msg.refresh()
+                    print("Done.")
 
                 case "NOTIFICATIONS":
                     print("Getting the notifications...")
@@ -110,14 +111,8 @@ if __name__ == "__main__":
                     type_cmd = "message"    # put in message mode.
                     itptr.run("clear")
 
-                    conversation = msg.find_messages(cov_reveiver)
-                    last_cov_index = len(conversation)  # get the base value to get the difference later.
+                    conversation = msg.find_messages(cov_reveiver, stream=True) # get msgs and activate auto stream msgs.
 
-                    conversation = encr.decrypt_messages(conversation, myself)
-                    conversation = msg.transform_messages(conversation)                    
-
-                    printer.print_messages(conversation) # print conversation
-                    
                     while True:     # message system.
                         raw_msg = input(f"[{type_cmd}] >>> ")
                         itptr.run("clearline")
@@ -125,22 +120,8 @@ if __name__ == "__main__":
                         match raw_msg:
 
                             case "$exit" | "$e":   # exit.
+                                msg.delete_stream() # deactivate auto stream.
                                 break
-
-                            case "$reload" | "$r": # reload / find new messages.
-
-                                last_msg = msg.find_messages(cov_reveiver)
-                                last_msg = last_msg[last_cov_index:]  # get the delta messages (new messages).
-
-                                if last_msg == []:
-                                    continue
-
-                                last_cov_index += len(last_msg)     # reindexing last messages.
-
-                                last_msg = encr.decrypt_messages(last_msg, myself)
-                                last_msg = msg.transform_messages(last_msg)
-
-                                printer.print_messages(last_msg) # print new conversation (messages).
 
                             case "":        # empty.
                                 continue
@@ -149,15 +130,6 @@ if __name__ == "__main__":
 
                                 encr_msg = encr.encrypt(raw_msg, key_receiver)
                                 msg.send(encr_msg, cov_reveiver, receiver)
-
-                                last_msg = msg.find_messages(cov_reveiver)
-                                last_msg = last_msg[last_cov_index:]  # get the delta messages (new messages).
-                                last_cov_index += len(last_msg)     # reindexing last messages.
-
-                                last_msg = encr.decrypt_messages(last_msg, myself)
-                                last_msg = msg.transform_messages(last_msg)
-
-                                printer.print_messages(last_msg) # print new conversation (messages).
 
                     type_cmd = "command"    # reput in command system.
 

@@ -1,6 +1,8 @@
 
 # get the class type
 from dataFileSystem import file
+from encryptionSystem import encryption
+from TerminalSystem import terminal
 
 # firebase messaging handler.
 import pyrebase
@@ -14,10 +16,13 @@ from typing import overload, Union
 
 class dataSystem:
 
-    def __init__(self, dataFileHandler: file) -> None:
+    def __init__(self, dataFileHandler: file, encr: encryption, printer: terminal) -> None:
 
         print("-> Init. variables...")
+        # Instances.
         self.dataFile = dataFileHandler
+        self.encr = encr
+        self.printer = printer
         # data from the file.
         self.data: dict = {}
         # the pseudo of the user.
@@ -30,6 +35,8 @@ class dataSystem:
         self.database = None
         # firebase instance.
         self.firebase = None
+        # stream messages instance.
+        self.msg_stream = None
         # PublicKeys list.
         self.PublicKeys = []
 
@@ -72,6 +79,32 @@ class dataSystem:
         """Refresh the public keys."""
         
         self.PublicKeys = self._get_RSA_keys()
+
+    def __stream_messages(self, message) -> None:
+        """Add automatically the message in the terminal."""        
+        
+        if message["data"] is None: # ignore if don't data.
+            return
+
+        msg_data = message["data"] # get the data.
+
+        # if one only msg.
+        if isinstance(msg_data, dict) and "data" in msg_data:
+            conversation = [msg_data]
+        else:
+            # multiples.
+            conversation = []
+            if isinstance(msg_data, dict):
+                for key, val in msg_data.items():
+                    if isinstance(val, dict):
+                        conversation.append(val)
+
+        conversation = self.encr.decrypt_messages(conversation, self.my_name)
+        conversation = self._data_to_msg(conversation)
+
+        print("\r", end="")  # remove the input.
+        self.printer.print_messages(conversation) # show on screen.
+        print(f"[message] >>> ", end="", flush=True) # reput the input.
 
     def _send_note(self, data: dict, myself_name: str) -> None:
         """Send data `data` to the child database."""
@@ -133,12 +166,7 @@ class dataSystem:
 
         return list_notes
 
-    @overload # last_one handler.
-    def  _get_data_from_database(self, database: str, last_one: bool = True, is_msg: bool = False | True) -> str: ...
-    @overload # not last_one handler.
-    def  _get_data_from_database(self, database: str, last_one: bool = False, is_msg = True | False) -> list[dict]: ...
-
-    def _get_data_from_database(self, database: str, last_one: bool = Union[False, True], is_msg: bool = False) -> Union[list[dict], str]:
+    def _get_data_from_database(self, database: str, is_msg: bool = False, stream: bool = False) -> list[dict]:
         """Return the raw data from database `database`."""
 
         if not self.database:
@@ -155,18 +183,23 @@ class dataSystem:
         if messages is None:
             return []
 
-        if not last_one:
+        list_msg: list[dict] = []
 
-            list_msg: list[dict] = []
+        for msg in messages:
+            list_msg.append(msg.val())
 
+        if stream:
+            self.msg_stream = self.database.child("conversations").child(database).child("messages").stream(self.__stream_messages)
 
-            for msg in messages:
-                list_msg.append(msg.val())
-
-            return list_msg
-        
-        return [messages[-1].val()]
+        return list_msg
     
+    def _del_stream(self) -> None:
+        """Delete stream instance."""
+
+        if self.msg_stream:
+            self.msg_stream.close()
+            self.msg_stream = None
+
     def _data_to_notes(self, data: list[dict]) -> list[tuple[str, str]]:
         """Return a printable data from `data`."""
 
@@ -308,10 +341,10 @@ class dataSystem:
 
 class message:
 
-    def __init__(self, dataFileHandler) -> None:
+    def __init__(self, dataFileHandler, Encryption, Printer: terminal) -> None:
         
         print("Starting message and database system...")
-        self.data = dataSystem(dataFileHandler)
+        self.data = dataSystem(dataFileHandler, Encryption, Printer)
         print("Message and database system done.")
 
     def refresh(self) -> None:
@@ -369,15 +402,15 @@ class message:
 
         return self.data._find_database(with_user=user)
 
-    def find_messages(self, database: str) -> list[dict]:
+    def delete_stream(self) -> None:
+        """Delete the instance stream to stop the automatic refresh messages."""
+
+        self.data._del_stream()
+
+    def find_messages(self, database: str, stream: bool = False) -> list[dict]:
         """Return all the messages from a database `database`."""
 
-        return self.data._get_data_from_database(database, last_one=False, is_msg=True)
-    
-    def find_last_messages(self, database: str) -> str:
-        """Return the last message from a database `database`."""
-
-        return self.data._get_data_from_database(database, True, True)
+        return self.data._get_data_from_database(database, is_msg=True, stream = stream)
 
     def transform_messages(self, messages: list[dict]) -> list[tuple[str, str, str]]:
         """Return a printable list of messages `messages` (NEED TO BE DECRYPTED BEFORE)."""
