@@ -11,9 +11,6 @@ import pyrebase
 from time import time
 from datetime import datetime
 
-# Styling types functions.
-from typing import overload, Union
-
 class dataSystem:
 
     def __init__(self, dataFileHandler: file, encr: encryption, printer: terminal) -> None:
@@ -102,9 +99,7 @@ class dataSystem:
         conversation = self.encr.decrypt_messages(conversation, self.my_name)
         conversation = self._data_to_msg(conversation)
 
-        print("\r", end="")  # remove the input.
         self.printer.print_messages(conversation) # show on screen.
-        print(f"[message] >>> ", end="", flush=True) # reput the input.
 
     def _send_note(self, data: dict, myself_name: str) -> None:
         """Send data `data` to the child database."""

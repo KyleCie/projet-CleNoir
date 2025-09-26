@@ -3,7 +3,8 @@
 from dataFileSystem import file
 
 # color system.
-from colorama import Fore, Style
+from colorama import Fore, Style, init
+from prompt_toolkit import print_formatted_text, ANSI
 
 class PrintSystem:
     def __init__(self, messages_parameters: file):
@@ -84,13 +85,13 @@ class PrintSystem:
         """Print in the terminal the messages."""
 
         if messages == ["NO MESSAGES"]:
-            print(f"{self.info_color}NO MESSAGES{Style.RESET_ALL}")
+            print_formatted_text(ANSI(f"{self.info_color}NO MESSAGES{Style.RESET_ALL}"))
             return
 
         for msg in messages[:-1]:
-            print(f"{self.info_color}{msg[0]}{self.name_color}{msg[1]} {self.content_color}{msg[2]}")
+            print_formatted_text(ANSI(f"{self.info_color}{msg[0]}{self.name_color}{msg[1]} {self.content_color}{msg[2]}"))
         
-        print(f"{self.info_color}{messages[-1][0]}{self.name_color}{messages[-1][1]} {self.content_color}{messages[-1][2]}{Style.RESET_ALL}")
+        print_formatted_text(ANSI(f"{self.info_color}{messages[-1][0]}{self.name_color}{messages[-1][1]} {self.content_color}{messages[-1][2]}"))
 
     def _print_notifs(self, notifs: list[tuple[str, str, str]]) -> None:
         """Print in the terminal the notifs."""
@@ -124,6 +125,7 @@ class terminal:
     def __init__(self, messages_parameters: file):
         
         print("Starting printer and terminal system...")
+        init(autoreset=True, convert=True)
         self.print = PrintSystem(messages_parameters)
         print("Printer and terminal system done.")
 

@@ -4,6 +4,9 @@ from UserSystem import interpreter
 from TerminalSystem import terminal
 from dataFileSystem import file
 
+from prompt_toolkit import PromptSession
+from prompt_toolkit.patch_stdout import patch_stdout
+
 from time import sleep
 
 if __name__ == "__main__":
@@ -21,6 +24,8 @@ if __name__ == "__main__":
     myself = msg.get_my_pseudo()    # my own pseudo.
     key_receiver = ""   # public key receiver for the message system.
     cov_reveiver = ""   # conversaton name for the message system.
+
+    session = PromptSession("[message] >>> ") # PromptSession instance for messages.
 
     #sleep(1)   # TODO: remove this command to activate.
 
@@ -112,14 +117,18 @@ if __name__ == "__main__":
                     itptr.run("clear")
 
                     conversation = msg.find_messages(cov_reveiver, stream=True) # get msgs and activate auto stream msgs.
+                    print("loading the messages...")
 
                     while True:     # message system.
-                        raw_msg = input(f"[{type_cmd}] >>> ")
+
+                        with patch_stdout(): # activate the prompt stream messages handler.
+                            raw_msg = session.prompt() # get the message.
+
                         itptr.run("clearline")
 
                         match raw_msg:
 
-                            case "$exit" | "$e":   # exit.
+                            case "$exit" | "$e":    # exit.
                                 msg.delete_stream() # deactivate auto stream.
                                 break
 
