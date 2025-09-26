@@ -3,7 +3,7 @@
 from dataFileSystem import file
 
 # color system.
-from colorama import Fore, Style, init
+from colorama import Fore, Style
 from prompt_toolkit import print_formatted_text, ANSI
 
 class PrintSystem:
@@ -125,7 +125,6 @@ class terminal:
     def __init__(self, messages_parameters: file):
         
         print("Starting printer and terminal system...")
-        init(autoreset=True, convert=True)
         self.print = PrintSystem(messages_parameters)
         print("Printer and terminal system done.")
 
