@@ -5,6 +5,7 @@ from typing import Callable, Literal
 # To clear the terminal.
 from os import system
 from sys import stdout
+from shutil import get_terminal_size
 
 class commandSystem:
     def __init__(self) -> None:
@@ -34,6 +35,18 @@ class commandSystem:
         """Clear the last line in terminal."""
 
         stdout.write("\033[F\033[K")
+        stdout.flush()
+
+    def clear_line_message(self, *args) -> None:
+        """Delete all the text from the terminal."""
+
+        cols = get_terminal_size().columns
+        lines_used = ((len(args[1][0]) + args[1][1]) // cols) + 1 # text + "[message] >>> "
+
+        for _ in range(lines_used):
+            stdout.write("\033[F")
+            stdout.write("\033[K")
+
         stdout.flush()
 
     def _test(self, *args) -> None:
@@ -277,6 +290,10 @@ class interpreter:
             "exit": self.commands._exit
         }
 
+        self.sys_commands: dict[str, Callable] = {
+            "clear_line_message": self.commands.clear_line_message
+        }
+
         print("Interpreter system done.")
 
     def find_command(self, command: str) -> Callable:
@@ -288,9 +305,13 @@ class interpreter:
 
         return cmd
 
-    def run(self, command: str) -> None:
-        """Run a command from the system, NOT USER."""
+    def run(self, command: str, *args) -> None:
+        """Run a command from the system, NOT FOR USER."""
 
         cmd: Callable = self.auth_commands.get(command,
                                             self.commands._error_systemCommand_not_found)
-        cmd(command)
+        
+        if cmd == self.commands._error_systemCommand_not_found:
+            cmd = self.sys_commands.get(command, cmd)
+
+        cmd(command, args)

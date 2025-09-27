@@ -124,7 +124,7 @@ if __name__ == "__main__":
                         with patch_stdout(): # activate the prompt stream messages handler.
                             raw_msg = session.prompt() # get the message.
 
-                        itptr.run("clearline")
+                        itptr.run("clear_line_message", raw_msg, 14)
 
                         match raw_msg:
 
@@ -161,7 +161,7 @@ if __name__ == "__main__":
 
                     while True:
                         raw_note = input(f"[{type_cmd}] >>> ")
-                        itptr.run("clearline")
+                        itptr.run("clear_line_message", raw_note, 11)
 
                         match raw_note:
 
