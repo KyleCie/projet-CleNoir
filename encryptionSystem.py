@@ -304,7 +304,6 @@ class encryption:
         clean_datas = []
 
         for note in data:
-            clean_data = {}
             note_data = note.get("data")
 
             if isinstance(note_data, str):
@@ -312,10 +311,10 @@ class encryption:
             else:
                 clean_note = note_data
 
-            clean_data["data"] = self.decrypt(clean_note).decode()
-            clean_data["timestamp"] = note.get("timestamp")
-
-            clean_datas.append(clean_data)
+            clean_datas.append({
+                "data": self.decrypt(clean_note).decode(),
+                "timestamp": note.get("timestamp")
+            })
 
         return clean_datas
 
@@ -328,7 +327,6 @@ class encryption:
         clean_datas = []
 
         for notif in data:
-            clean_data = {}
             note_data = notif.get("data")
 
             if isinstance(note_data, str):
@@ -336,11 +334,11 @@ class encryption:
             else:
                 clean_note = note_data
 
-            clean_data["from"] = notif.get("from")
-            clean_data["data"] = self.decrypt(clean_note).decode()
-            clean_data["timestamp"] = notif.get("timestamp")
-
-            clean_datas.append(clean_data)
+            clean_datas.append({
+                "from": notif.get("from"),
+                "data": self.decrypt(clean_note).decode(),
+                "timestamp":notif.get("timestamp")
+            })
 
         return clean_datas
 
