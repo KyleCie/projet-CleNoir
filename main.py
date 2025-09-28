@@ -7,7 +7,7 @@ from dataFileSystem import file
 from prompt_toolkit import PromptSession
 from prompt_toolkit.patch_stdout import patch_stdout
 
-from time import sleep
+from threading import Thread, Event
 
 if __name__ == "__main__":
     fhandler = file()
@@ -26,8 +26,6 @@ if __name__ == "__main__":
     cov_reveiver = ""   # conversaton name for the message system.
 
     session = PromptSession("[message] >>> ") # PromptSession instance for messages.
-
-    #sleep(1)   # TODO: remove this command to activate.
 
     type_cmd = "command"
     itptr.run("clear")
@@ -79,6 +77,8 @@ if __name__ == "__main__":
                 case "NOTIFICATIONS":
                     print("Getting the notifications...")
                     notifs = msg.get_notifications()
+                    notifs = encr.decrypt_notifications(notifs)
+                    notifs = msg.transform_notifications(notifs)
                     itptr.run("clearline")
                     printer.print_notifications(notifs)
 
@@ -108,8 +108,9 @@ if __name__ == "__main__":
                         print(f"User : '{receiver}' doesn't exist !")
                         continue
 
-                    cov_reveiver = msg.find_conversation(receiver) # find user conv with the "_connect_conversation" result.
+                    cov_reveiver = msg.find_conversation(receiver)  # find user conv with the "_connect_conversation" result.
                     key_receiver = msg.get_PublicKey_from(receiver) # get public key from the receiver.
+                    msg.set_conversation(cov_reveiver)              # add the conversation to msg to auto-remove notifs. 
 
                     print(f"'{cov_reveiver}' found.")
                     print("Connecting...")
@@ -117,7 +118,23 @@ if __name__ == "__main__":
                     itptr.run("clear")
 
                     conversation = msg.find_messages(cov_reveiver, stream=True) # get msgs and activate auto stream msgs.
+
                     print("loading the messages...")
+
+                    stop_event = Event()
+                    th_spinner = Thread(target=printer.spinner_task, args=(stop_event, "decrypting"))
+                    th_spinner.start()
+
+                    conversation = encr.decrypt_messages(conversation, myself)
+
+                    stop_event.set()
+                    th_spinner.join()
+
+                    print("transforming...")
+                    conversation = msg.transform_messages(conversation)
+
+                    print("printing...")
+                    printer.print_messages(conversation)
 
                     while True:     # message system.
 
@@ -130,6 +147,7 @@ if __name__ == "__main__":
 
                             case "$exit" | "$e":    # exit.
                                 msg.delete_stream() # deactivate auto stream.
+                                msg.set_conversation("") # remove the conv from msg.
                                 break
 
                             case "":        # empty.
@@ -138,7 +156,8 @@ if __name__ == "__main__":
                             case _:         # send.
 
                                 encr_msg = encr.encrypt(raw_msg, key_receiver)
-                                msg.send(encr_msg, cov_reveiver, receiver)
+                                encr_notif = encr.encrypt_notif("New message", key_receiver)
+                                msg.send(encr_msg, encr_notif, cov_reveiver, receiver)
 
                     type_cmd = "command"    # reput in command system.
 

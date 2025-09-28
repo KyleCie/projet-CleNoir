@@ -6,6 +6,11 @@ from dataFileSystem import file
 from colorama import Fore, Style
 from prompt_toolkit import print_formatted_text, ANSI
 
+# spinner system.
+from time import sleep
+from sys import stdout
+from threading import Thread, Event
+
 class PrintSystem:
     def __init__(self, messages_parameters: file):
 
@@ -23,6 +28,8 @@ class PrintSystem:
             "GREEN": Fore.GREEN,
             "RED": Fore.RED,
             "PURPLE": Fore.MAGENTA,
+            "BLUE": Fore.BLUE,
+            "CYAN": Fore.CYAN
         }
 
         self.key_colors = self.colors.keys()
@@ -88,10 +95,15 @@ class PrintSystem:
             print_formatted_text(ANSI(f"{self.info_color}NO MESSAGES{Style.RESET_ALL}"))
             return
 
-        for msg in messages[:-1]:
-            print_formatted_text(ANSI(f"{self.info_color}{msg[0]}{self.name_color}{msg[1]} {self.content_color}{msg[2]}"))
-        
-        print_formatted_text(ANSI(f"{self.info_color}{messages[-1][0]}{self.name_color}{messages[-1][1]} {self.content_color}{messages[-1][2]}"))
+        buffer = []
+
+        for msg in messages:
+            buffer.append(
+                f"{self.info_color}{msg[0]}{self.name_color}{msg[1]} {self.content_color}{msg[2]}{Style.RESET_ALL}"
+            )
+
+        all_msgs = "\n".join(buffer)
+        print_formatted_text(ANSI(all_msgs))
 
     def _print_notifs(self, notifs: list[tuple[str, str, str]]) -> None:
         """Print in the terminal the notifs."""
@@ -120,6 +132,17 @@ class PrintSystem:
             clean_colors.append(clean_color)
 
         self.file._save_colors(clean_colors)
+
+    def _spin(self, stop_event, say_what) -> None:
+        """A spinner in the terminal."""
+        spinner = [".", "..", "..."]
+        idx = 0
+        while not stop_event.is_set():
+            stdout.write(f"\r{say_what}{spinner[idx % len(spinner)]}{" " * (3-(idx % len(spinner)))}")
+            stdout.flush()
+            idx += 1
+            sleep(0.2)
+        stdout.write(f"\r{say_what}... done!     \n")
 
 class terminal:
     def __init__(self, messages_parameters: file):
@@ -162,3 +185,8 @@ class terminal:
         """Return the colors parameters to save."""
 
         self.print._save_colors()
+    
+    def spinner_task(self, stop_event: Event, say_what: str):
+        """A spinenr system in the terminal."""
+
+        self.print._spin(stop_event, say_what)

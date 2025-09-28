@@ -7,6 +7,9 @@ from TerminalSystem import terminal
 # firebase messaging handler.
 import pyrebase
 
+# Errors handler.
+from requests import exceptions
+
 # timestamp
 from time import time
 from datetime import datetime
@@ -24,6 +27,8 @@ class dataSystem:
         self.data: dict = {}
         # the pseudo of the user.
         self.my_name: str = ""
+        # Conversation name (if the user is in one.).
+        self.conv_names: list[str] = []
 
         # database informations.
         self.db_infos = self.dataFile._get_db_infos()
@@ -32,8 +37,10 @@ class dataSystem:
         self.database = None
         # firebase instance.
         self.firebase = None
-        # stream messages instance.
+        # stream messages and notifications instance.
         self.msg_stream = None
+        self.msg_just_added = False
+        self.notif_stream = None
         # PublicKeys list.
         self.PublicKeys = []
 
@@ -49,10 +56,26 @@ class dataSystem:
     def _connect_to_db(self) -> None:
         """Create an instance database."""
 
-        self.firebase = pyrebase.initialize_app(self.db_infos)
-        self.database = self.firebase.database()
+        try:
 
+            self.firebase = pyrebase.initialize_app(self.db_infos)
+            self.database = self.firebase.database()
+
+        except exceptions.ConnectionError as e:
+            print(e)
+            print("Impossible to connect to the database, (problem with connection ?).")
+
+        except exceptions.ConnectTimeout as e:
+            print(e)
+            print("Too many try to establish a connetion to the database, (probleme with connection ?).")
+
+        except Exception as e:
+            print(e)
+            print("Unknown error when trying to establish a connection.")            
+            
         self.PublicKeys = self._get_RSA_keys()
+
+        self.notif_stream =  self.database.child(self.my_name).child("notifications").stream(self.__stream_notifs)   
 
     def _get_RSA_keys(self) -> list[dict]:
         """Get the public RSA keys from database."""
@@ -80,12 +103,16 @@ class dataSystem:
     def __stream_messages(self, message) -> None:
         """Add automatically the message in the terminal."""        
         
+        if self.msg_just_added:
+            self.msg_just_added = False
+            return
+
         if message["data"] is None: # ignore if don't data.
             return
 
         msg_data = message["data"] # get the data.
 
-        # if one only msg.
+        # if only one msg.
         if isinstance(msg_data, dict) and "data" in msg_data:
             conversation = [msg_data]
         else:
@@ -100,6 +127,27 @@ class dataSystem:
         conversation = self._data_to_msg(conversation)
 
         self.printer.print_messages(conversation) # show on screen.
+    
+    def __stream_notifs(self, notif) -> None:
+        """Get automatically the new notifications."""
+
+        if notif["data"] is None or self.conv_names == [] or notif["event"] != "put":
+            return
+
+        content_notif = notif["data"]
+        from_conv= content_notif["from"]
+
+        if from_conv in self.conv_names:
+            self.database.child(self.my_name).child("notifications").child(notif["path"]).remove()
+
+    def _set_conv(self, name: str) -> None:
+        """Set the conv to `name`."""
+
+        if name == "":
+            self.conv_names = []
+            return 
+        
+        self.conv_names = name.split("_")[1:]
 
     def _send_note(self, data: dict, myself_name: str) -> None:
         """Send data `data` to the child database."""
@@ -185,6 +233,7 @@ class dataSystem:
 
         if stream:
             self.msg_stream = self.database.child("conversations").child(database).child("messages").stream(self.__stream_messages)
+            self.msg_just_added = True
 
         return list_msg
     
@@ -274,12 +323,22 @@ class dataSystem:
         
         self.database.child("conversations").child(db_name1).set({"auth": [self.my_name, with_user], "messages": {}})
         return db_name1
-    
-    def _get_notifications(self) -> list[tuple[str, str, str]]:
-        """Return the user's notifications."""
+
+    def _get_raw_notifications(self) -> list[dict]:
+        """return a raw list of notifications."""
 
         notifs = self.database.child(self.my_name).child("notifications").get()
         notifs = notifs.each()
+
+        list_notifs: list[dict] = []
+
+        for notif in notifs:
+            list_notifs.append(notif.val())
+
+        return list_notifs
+
+    def _data_to_notif(self, notifs) -> list[tuple[str, str, str]]:
+        """Return the printable list of notifications."""
 
         if notifs is None:
             return ["NO NOTIFS"]
@@ -287,7 +346,6 @@ class dataSystem:
         list_notifs: list[tuple[str, str, str]] = []
 
         for notif in notifs:
-            notif = notif.val()
             dt = datetime.fromtimestamp(notif.get("timestamp"))
             dt = dt.strftime("%d/%m/%Y %H:%M:%S")
             list_notifs.append((f"[{dt}]", f"[{notif.get("from")}]", f"{notif.get("data")}"))
@@ -347,11 +405,11 @@ class message:
 
         self.data._refresh()
     
-    def send(self, msg: str | bytes, database: str, receiver: str) -> None:
+    def send(self, msg: str | bytes, notif: str | bytes, database: str, receiver: str) -> None:
         """Send a message `msg` in `message` database."""
 
         dict_msg = self.data._create_dict_data(msg)
-        dict_notif = self.data._create_dict_data("New message")
+        dict_notif = self.data._create_dict_data(notif)
         self.data._send(data=dict_msg, database=database, is_msg=True)
         self.data._send_notif(receiver, dict_notif)
 
@@ -418,11 +476,21 @@ class message:
         return self.data._data_to_notes(notes)
     
     def get_notifications(self) -> list[tuple[str, str, str]]:
-        """Return a list of the user notifications."""
+        """Return all the notifications from the database."""
 
-        return self.data._get_notifications()
+        return self.data._get_raw_notifications()
     
+    def transform_notifications(self, notifications: list[dict]) -> list[tuple[str, str ,str]]:
+        """Return a printable list of notifications `notifications` (NEED TO BE DECRYPTED BEFORE)."""
+    
+        return self.data._data_to_notif(notifications)
+
     def delete_notifications(self) -> None:
         """Delete the user's notifications."""
 
         self.data._delete_notifications()
+    
+    def set_conversation(self, conversation_name: str) -> None:
+        """Set the conversation to `conversation_name` for the auto-delete notifs system."""
+
+        self.data._set_conv(conversation_name)

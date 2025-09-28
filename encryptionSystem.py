@@ -10,6 +10,8 @@ from Crypto.Cipher import AES, PKCS1_OAEP
 from Crypto.PublicKey import RSA
 from base64 import b64decode, b64encode
 
+from concurrent.futures import ThreadPoolExecutor
+
 # randomness.
 from Crypto.Random import get_random_bytes
 
@@ -119,6 +121,22 @@ class rsaSystem:
 
         return (session_key, enc_session_key_me)
 
+    def encrypt_notif(self, reciever_key: RSA.RsaKey | str) -> tuple[bytes, bytes]:
+        """create a session_key and enc_session_key from the public key: `reciever_key`."""
+
+        if isinstance(reciever_key, str):
+            clean_key = RSA.import_key(reciever_key)
+
+        else:
+            clean_key = reciever_key
+
+        session_key = get_random_bytes(16)
+
+        cipher_rsa_reciever = PKCS1_OAEP.new(clean_key)
+        enc_session_key_reciever = cipher_rsa_reciever.encrypt(session_key)
+
+        return (session_key, enc_session_key_reciever)
+
     def decrypt(self, enc_session_key: bytes) -> bytes:
         """retrieve session_key from enc_session_key with the private key. `enc_session_key`."""
 
@@ -188,7 +206,7 @@ class encryption:
         return result
     
     def encrypt_note(self, data: str) -> str:
-        """encryot the data with the encryption method."""
+        """encrypt the data with the encryption method."""
 
         if isinstance(data, str):
             clean_data = data.encode('utf-8')
@@ -201,6 +219,25 @@ class encryption:
         session_key, enc_session_key_me  = self.rsa.encrypt_note()
         nonce, cipher_text, tag = self.aes.encrypt(clean_data, session_key)
         result = enc_session_key_me + nonce + tag + cipher_text
+
+        if isinstance(data, str):
+            return b64encode(result).decode()
+        return result
+    
+    def encrypt_notif(self, data: str, key_reciever) -> str:
+        """encrypt the data with the encryption method."""
+
+        if isinstance(data, str):
+            clean_data = data.encode('utf-8')
+        else:
+            clean_data = data
+
+        if not key_reciever:
+            raise ValueError("The value of key_reciever is None.")
+
+        session_key, enc_session_key_re  = self.rsa.encrypt_notif(key_reciever)
+        nonce, cipher_text, tag = self.aes.encrypt(clean_data, session_key)
+        result = enc_session_key_re + nonce + tag + cipher_text
 
         if isinstance(data, str):
             return b64encode(result).decode()
@@ -237,36 +274,29 @@ class encryption:
         return res_data
 
     def decrypt_messages(self, data: list[dict], me: str) -> list[dict]:
-        """Return a decrypted list of the data `data`."""
-
-        clean_datas = []
-
-        for msg in data:
-            clean_msg = {}
+        def worker(msg):
             from_who = msg.get("from")
-            msg_data = msg.get("data")
-
-            if isinstance(msg_data, str):
-                clean_data = b64decode(msg_data)
-            else:
-                clean_data = msg
+            raw_data = msg.get("data")
+            clean_data = b64decode(raw_data) if isinstance(raw_data, str) else raw_data
 
             if len(clean_data) < 512:
-                raise ValueError(f"The variable clean_data is less than 512 bytes, -> {len(clean_data)}.")
+                return None
 
+            if from_who == me:
+                segment = clean_data[256:]
+            else:
+                segment = clean_data[0:256] + clean_data[512:]
 
-            if from_who == me:                                      # if it's from me,
-                clean_data = clean_data[256:]                       # take the first coded key
-            else:                                                   # else,
-                clean_data = clean_data[0:256] + clean_data[512:]   # take the second coded key
+            plaintext = self.decrypt(segment)
 
-            clean_msg["from"] = from_who
-            clean_msg["data"] = self.decrypt(clean_data).decode()
-            clean_msg["timestamp"] = msg.get("timestamp")
+            return {
+                "from": from_who,
+                "data": plaintext.decode(errors="replace"),
+                "timestamp": msg.get("timestamp")
+            }
 
-            clean_datas.append(clean_msg)
-
-        return clean_datas
+        with ThreadPoolExecutor() as ex:
+            return [r for r in ex.map(worker, data) if r]
 
     def decrypt_notes_myspace(self, data: list[dict]) -> list[dict]:
         """Return a decrypted list of the data `data`."""
@@ -284,6 +314,31 @@ class encryption:
 
             clean_data["data"] = self.decrypt(clean_note).decode()
             clean_data["timestamp"] = note.get("timestamp")
+
+            clean_datas.append(clean_data)
+
+        return clean_datas
+
+    def decrypt_notifications(self, data: list[dict]) -> list[dict]:
+        """Return a decrypted list of the data `data`."""
+
+        if data is None:
+            return None
+
+        clean_datas = []
+
+        for notif in data:
+            clean_data = {}
+            note_data = notif.get("data")
+
+            if isinstance(note_data, str):
+                clean_note = b64decode(note_data)
+            else:
+                clean_note = note_data
+
+            clean_data["from"] = notif.get("from")
+            clean_data["data"] = self.decrypt(clean_note).decode()
+            clean_data["timestamp"] = notif.get("timestamp")
 
             clean_datas.append(clean_data)
 

@@ -120,7 +120,7 @@ class commandSystem:
 
                             return ("CHANGE_MSG_COLOR", clean_cmd[2].upper(), clean_cmd[3].upper(), clean_cmd[4].upper())
 
-                        print("Colors available : WHITE, BLACK, YELLOW, GREEN, RED, PURPLE.")
+                        print("Colors available : WHITE, BLACK, YELLOW, GREEN, RED, PURPLE, BLUE, CYAN.")
                         color1 = input("Color for informations (empty = don't change) : ").upper()
                         color2 = input("Color for name (empty = don't change) : ").upper()
                         color3 = input("Color for content (empty = don't change) : ").upper()
@@ -138,7 +138,7 @@ class commandSystem:
 
                             return ("CHANGE_MSG_COLOR", clean_cmd[2].upper(), clean_cmd[3].upper())
 
-                        print("Colors available : WHITE, BLACK, YELLOW, GREEN, RED, PURPLE.")
+                        print("Colors available : WHITE, BLACK, YELLOW, GREEN, RED, PURPLE, BLUE, CYAN.")
                         color1 = input("Color for informations (empty = don't change) : ").upper()
                         color2 = input("Color for content (empty = don't change) : ").upper()
 
@@ -155,7 +155,7 @@ class commandSystem:
 
                             return ("CHANGE_NOTIFS_COLOR", clean_cmd[2].upper(), clean_cmd[3].upper(), clean_cmd[4].upper())
 
-                        print("Colors available : WHITE, BLACK, YELLOW, GREEN, RED, PURPLE.")
+                        print("Colors available : WHITE, BLACK, YELLOW, GREEN, RED, PURPLE, BLUE, CYAN.")
                         color1 = input("Color for informations (empty = don't change) : ").upper()
                         color2 = input("Color for name (empty = don't change) : ").upper()
                         color3 = input("Color for content (empty = don't change) : ").upper()
