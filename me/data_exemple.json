@@ -7,8 +7,9 @@
         "content_info_color": "WHITE",
         "note_info_color": "YELLOW",
         "note_content_color": "GREEN",
-        "notif_info_color": "GREEN",
-        "notif_name_color": "GREEN",
+        "notif_info_color": "WHITE",
+        "notif_name_color": "WHITE",
         "notif_content_color": "YELLOW"
-    }
+    },
+    "version": "1.1.0"
 }

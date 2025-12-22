@@ -72,7 +72,7 @@ class dataSystem:
             
         self.PublicKeys = self._get_RSA_keys()
 
-        self.notif_stream =  self.database.child(self.my_name).child("notifications").stream(self.__stream_notifs)   
+        self.notif_stream = self.database.child("users").child(self.my_name).child("notifications").stream(self.__stream_notifs)   
 
     def _get_RSA_keys(self) -> list[dict]:
         """Get the public RSA keys from database."""
@@ -135,7 +135,7 @@ class dataSystem:
         from_conv= content_notif["from"]
 
         if from_conv in self.conv_names:
-            self.database.child(self.my_name).child("notifications").child(notif["path"]).remove()
+            self.database.child("users").child(self.my_name).child("notifications").child(notif["path"]).remove()
 
     def _set_conv(self, name: str) -> None:
         """Set the conv to `name`."""
@@ -152,7 +152,7 @@ class dataSystem:
         if not self.database:
             raise ValueError("The value of database is None.")
 
-        self.database.child(self.my_name).child("myspace").child(myself_name).push(data)
+        self.database.child("users").child(self.my_name).child("myspace").child(myself_name).push(data)
 
     def _send(self, data: dict, database: str, is_msg: bool = False) -> None:
         """Send a data `data` to the child database named `database`"""
@@ -185,7 +185,7 @@ class dataSystem:
         if not self.database:
             raise ValueError("The value of database is None.")
         
-        self.database.child(receiver).child("notifications").push(data)
+        self.database.child("users").child(receiver).child("notifications").push(data)
 
     def _get_data_from_myspace(self, name: str) -> list[dict]:
         """Return the raw data from myspace `myspace`."""
@@ -193,7 +193,7 @@ class dataSystem:
         if not self.database:
             raise ValueError("The value of database is None.")
 
-        notes = self.database.child(self.my_name).child("myspace").child(name).get()
+        notes = self.database.child("users").child(self.my_name).child("myspace").child(name).get()
         notes = notes.each()
 
         if notes is None:
@@ -308,10 +308,10 @@ class dataSystem:
     def _find_myspace(self) -> None:
         """Create or find the myspace's user."""
 
-        myspace = self.database.child(self.my_name).get().val()
+        myspace = self.database.child("users").child(self.my_name).get().val()
 
         if myspace is None:
-            self.database.child(self.my_name).set({"auth": [self.my_name]})
+            self.database.child("users").child(self.my_name).set({"auth": [self.my_name]})
 
     def _find_database(self, with_user: str) -> str:
         """Return a database name where it is a conversation with `with_user`."""
@@ -331,7 +331,7 @@ class dataSystem:
     def _get_raw_notifications(self) -> list[dict]:
         """return a raw list of notifications."""
 
-        notifs = self.database.child(self.my_name).child("notifications").get()
+        notifs = self.database.child("users").child(self.my_name).child("notifications").get()
         notifs = notifs.each()
 
         list_notifs: list[dict] = []
@@ -359,7 +359,7 @@ class dataSystem:
     def _delete_notifications(self) -> None:
         """Delete notifications."""
 
-        self.database.child(self.my_name).child("notifications").set({})
+        self.database.child("users").child(self.my_name).child("notifications").set({})
 
     def _create_dict_data(self, data: str | bytes, for_who: str | None = None) -> dict:
         """Create an dict to be send in database."""
