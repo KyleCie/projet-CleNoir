@@ -61,17 +61,14 @@ class dataSystem:
             self.firebase = pyrebase.initialize_app(self.db_infos)
             self.database = self.firebase.database()
 
-        except exceptions.ConnectionError as e:
-            print(e)
-            print("Impossible to connect to the database, (problem with connection ?).")
-
         except exceptions.ConnectTimeout as e:
-            print(e)
-            print("Too many try to establish a connetion to the database, (probleme with connection ?).")
+            raise exceptions.ConnectionError("Too many try to establish a connetion to the database, (problem with connection ?).", e)
+
+        except exceptions.ConnectionError as e:
+            raise exceptions.ConnectionError("Impossible to connect to the database, (problem with connection ?).", e)
 
         except Exception as e:
-            print(e)
-            print("Unknown error when trying to establish a connection.")            
+            raise exceptions.ConnectionError("Unknown error when trying to establish a connection.",   e)          
             
         self.PublicKeys = self._get_RSA_keys()
 
@@ -244,7 +241,7 @@ class dataSystem:
             self.msg_stream.close()
             self.msg_stream = None
 
-    def _data_to_notes(self, data: list[dict]) -> list[tuple[str, str]]:
+    def _data_to_notes(self, data: list[dict]) -> list[tuple[str, str]] | list[str]:
         """Return a printable data from `data`."""
 
         list_notes: list[tuple[str, str]] = []
@@ -259,7 +256,7 @@ class dataSystem:
         
         return ["NO NOTES"]
 
-    def _data_to_msg(self, data: list[dict]) -> list[tuple[str, str, str]]:
+    def _data_to_msg(self, data: list[dict]) -> list[tuple[str, str, str]] | list[str]:
         """Return a printable data from `data`."""
 
         list_msg: list[tuple[str, str, str]] = []
@@ -337,7 +334,7 @@ class dataSystem:
 
         return list_notifs
 
-    def _data_to_notif(self, notifs) -> list[tuple[str, str, str]]:
+    def _data_to_notif(self, notifs) -> list[tuple[str, str, str]] | list[str]:
         """Return the printable list of notifications."""
 
         if notifs is None:
@@ -465,22 +462,22 @@ class message:
 
         return self.data._get_data_from_database(database, is_msg=True, stream = stream)
 
-    def transform_messages(self, messages: list[dict]) -> list[tuple[str, str, str]]:
+    def transform_messages(self, messages: list[dict]) -> list[tuple[str, str, str]] | list[str]:
         """Return a printable list of messages `messages` (NEED TO BE DECRYPTED BEFORE)."""
 
         return self.data._data_to_msg(messages)
     
-    def transform_notes(self, notes: list[dict]) -> list[tuple[str, str]]:
+    def transform_notes(self, notes: list[dict]) -> list[tuple[str, str]] | list[str]:
         """Return a printable list of notes `notes` (NEED TO BE DECRYPTED BEFORE)."""
 
         return self.data._data_to_notes(notes)
     
-    def get_notifications(self) -> list[tuple[str, str, str]]:
+    def get_notifications(self) -> list[tuple[str, str, str]] | list[str]:
         """Return all the notifications from the database."""
 
         return self.data._get_raw_notifications()
     
-    def transform_notifications(self, notifications: list[dict]) -> list[tuple[str, str ,str]]:
+    def transform_notifications(self, notifications: list[dict]) -> list[tuple[str, str ,str]] | list[str]:
         """Return a printable list of notifications `notifications` (NEED TO BE DECRYPTED BEFORE)."""
     
         return self.data._data_to_notif(notifications)
