@@ -9,12 +9,33 @@ from prompt_toolkit.patch_stdout import patch_stdout
 
 from threading import Thread, Event
 
+from getpass import getpass
+from time import sleep
+from hashlib import sha256
+
 if __name__ == "__main__":
     fhandler = file()
     encr = encryption()
     printer = terminal(fhandler)
     msg = message(fhandler, encr, printer)
     itptr = interpreter()
+
+    if fhandler._verify_pwd_file():
+        pwd = fhandler._open_pwd()
+        user_pwd = getpass("Enter your password: ")
+        trys = 1
+
+        while pwd != sha256(user_pwd.encode()).hexdigest() and trys < 4: # password verification loop.
+            sleep(1)
+            print("Wrong password, try again.")
+            user_pwd = getpass("Enter your password: ")
+            trys += 1
+
+        if trys == 4: # too many wrong attempts.
+            print("Too many wrong attempts, exiting...")
+            exit()
+
+        sleep(1)
 
     print("Starting...")
 
@@ -65,6 +86,24 @@ if __name__ == "__main__":
                     msg.delete_notifications()
                     print("Done.")
 
+                case "RESET_PASSWORD":
+                    password = getpass("Enter your new password: ")
+                    confirm_password = getpass("Confirm your new password: ")
+
+                    if password != confirm_password:
+                        print("Passwords do not match, aborting.")
+                        continue
+
+                    if password == "":
+                        fhandler._delete_pwd_file()
+                        print("Password deleted successfully.")
+                        continue
+
+                    hashed_pwd = sha256(password.encode()).hexdigest()
+                    print("Saving new password...")
+                    fhandler._save_password(hashed_pwd)
+                    print("Password updated successfully.")
+
                 case "SAY_PSEUDO":
                     print(f"pseudo: {myself}")
                     continue
@@ -86,6 +125,19 @@ if __name__ == "__main__":
                     print("Saving colors...")
                     printer.save_colors()
                     print("Done.")
+
+                case "SAVE_PASSWORD":
+                    new_pwd = getpass("Enter your new password: ")
+                    confirm_pwd = getpass("Confirm your new password: ")
+
+                    if new_pwd != confirm_pwd:
+                        print("Passwords do not match, aborting.")
+                        continue
+
+                    hashed_pwd = sha256(new_pwd.encode()).hexdigest()
+                    print("Saving new password...")
+                    fhandler._save_password(hashed_pwd)
+                    print("Password updated successfully.")
 
                 case "EXIT":
                     print("Exiting...")
@@ -139,6 +191,10 @@ if __name__ == "__main__":
                     conversation = msg.transform_messages(conversation)
 
                     print("printing...")
+
+                    sleep(0.1)
+                    itptr.run("clear")
+
                     printer.print_messages(conversation)
 
                     while True:     # message system.

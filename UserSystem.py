@@ -194,6 +194,9 @@ class commandSystem:
         
                 case "notif":
                     return "RESET_NOTIF"
+                
+                case "password" | "pwd":
+                    return "RESET_PASSWORD"
 
                 case _:
                     self._error_not_found(f"reset -> {clean_cmd[0]}")
@@ -211,10 +214,12 @@ class commandSystem:
 
             match clean_cmd[0]:
 
-                case "color" | "colors":
-                    
+                case "color" | "colors":                    
                     return "SAVE_COLORS"
-                
+
+                case "password" | "pwd":
+                    return "SAVE_PASSWORD"
+                            
                 case _:
                     self._error_not_found(f"save -> {clean_cmd[0]}")
                     return
