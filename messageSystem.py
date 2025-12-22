@@ -234,12 +234,19 @@ class dataSystem:
 
         return list_msg
     
-    def _del_stream(self) -> None:
-        """Delete stream instance."""
+    def _del_msg_stream(self) -> None:
+        """Delete message stream instance."""
 
         if self.msg_stream:
             self.msg_stream.close()
             self.msg_stream = None
+
+    def _del_notif_stream(self) -> None:
+        """Delete notifications stream instance."""
+
+        if self.notif_stream:
+            self.notif_stream.close()
+            self.notif_stream = None
 
     def _data_to_notes(self, data: list[dict]) -> list[tuple[str, str]] | list[str]:
         """Return a printable data from `data`."""
@@ -452,10 +459,15 @@ class message:
 
         return self.data._find_database(with_user=user)
 
-    def delete_stream(self) -> None:
-        """Delete the instance stream to stop the automatic refresh messages."""
+    def delete_message_stream(self) -> None:
+        """Delete the instance message stream to stop the automatic refresh messages."""
 
-        self.data._del_stream()
+        self.data._del_msg_stream()
+
+    def delete_notification_stream(self) -> None:
+        """Delete the instance notifications stream to stop the checking notifs."""
+
+        self.data._del_notif_stream()
 
     def find_messages(self, database: str, stream: bool = False) -> list[dict]:
         """Return all the messages from a database `database`."""

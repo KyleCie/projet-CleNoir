@@ -89,6 +89,9 @@ if __name__ == "__main__":
 
                 case "EXIT":
                     print("Exiting...")
+                    # remove the streams due to unstopping program.
+                    msg.delete_message_stream()
+                    msg.delete_notification_stream()
                     break
 
                 case _:
@@ -121,14 +124,16 @@ if __name__ == "__main__":
 
                     print("loading the messages...")
 
+                    # starting the loading message.
                     stop_event = Event()
                     th_spinner = Thread(target=printer.spinner_task, args=(stop_event, "decrypting"))
                     th_spinner.start()
 
+                    # decrypt in the background.
                     conversation = encr.decrypt_messages(conversation, myself)
 
-                    stop_event.set()
-                    th_spinner.join()
+                    stop_event.set() # stop it.
+                    th_spinner.join() # join it.
 
                     print("transforming...")
                     conversation = msg.transform_messages(conversation)
@@ -146,7 +151,7 @@ if __name__ == "__main__":
                         match raw_msg:
 
                             case "$exit" | "$e":    # exit.
-                                msg.delete_stream() # deactivate auto stream.
+                                msg.delete_message_stream() # deactivate auto stream.
                                 msg.set_conversation("") # remove the conv from msg.
                                 break
 

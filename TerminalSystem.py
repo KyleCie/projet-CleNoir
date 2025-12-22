@@ -187,6 +187,6 @@ class terminal:
         self.print._save_colors()
     
     def spinner_task(self, stop_event: Event, say_what: str):
-        """A spinenr system in the terminal."""
+        """A spinner system in the terminal."""
 
         self.print._spin(stop_event, say_what)

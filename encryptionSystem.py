@@ -280,6 +280,7 @@ class encryption:
             clean_data = b64decode(raw_data) if isinstance(raw_data, str) else raw_data
 
             if len(clean_data) < 512:
+                print(f"The variable clean_data is less than 512 bytes, -> {len(clean_data)}.")
                 return None
 
             if from_who == me:
@@ -307,7 +308,10 @@ class encryption:
             note_data = note.get("data")
 
             if isinstance(note_data, str):
-                clean_note = b64decode(note_data)
+                try:
+                    clean_note = b64decode(note_data)
+                except Exception as e:
+                    print(f"Problem with one of the raw data: {e}")
             else:
                 clean_note = note_data
 
@@ -330,7 +334,10 @@ class encryption:
             note_data = notif.get("data")
 
             if isinstance(note_data, str):
-                clean_note = b64decode(note_data)
+                try:
+                    clean_note = b64decode(note_data)
+                except Exception as e:
+                    print(f"Problem with one of the raw data: {e}")
             else:
                 clean_note = note_data
 
