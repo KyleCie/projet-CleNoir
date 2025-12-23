@@ -3,7 +3,11 @@
 from json import dump, loads, load
 from cryptography.fernet import Fernet
 
-# files and directory.s
+# decrypting system.
+from Crypto.Cipher import AES
+from base64 import b64decode
+
+# files and directorys.
 from os import listdir, getcwd, path
 
 class file:
@@ -28,12 +32,32 @@ class file:
         self._open_json()
         print("File system done.")
 
-    def _open_db(self) -> None:
-        """Open and decrypt the database infos file."""
+    def _open_key(self) -> bytes:
+        """Open and return the key file."""
 
         with open(self.MY_KEY, "rb") as key_file:
             key = key_file.read()
 
+        key = b64decode(key)
+        key = key[::-1]
+
+        s_k = key[:16]
+        nonce = key[16:32]
+        cipher_text = key[32:-16]
+        tag = key[-16:]
+
+        cipher_aes = AES.new(s_k, AES.MODE_EAX, nonce)
+        key = cipher_aes.decrypt_and_verify(cipher_text, tag)
+
+        key = bytes(b ^ 0xAA for b in key)
+        key = key[8:-8][::-1]
+
+        return key
+
+    def _open_db(self) -> None:
+        """Open and decrypt the database infos file."""
+
+        key = self._open_key()
         fernet = Fernet(key)
 
         with open(self.DB_DIR, "rb") as file:
@@ -45,9 +69,7 @@ class file:
     def _open_pwd(self) -> str:
         """Open and decrypt the password file."""
 
-        with open(self.MY_KEY, "rb") as key_file:
-            key = key_file.read()
-
+        key = self._open_key()
         fernet = Fernet(key)
 
         with open(self.PWD_DIR, "rb") as file:
