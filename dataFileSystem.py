@@ -15,6 +15,7 @@ class file:
     def __init__(self):
         
         print("Starting file system...")
+
         print("-> Creating paths...")
         # directorys.
         self.DIRECTORY = getcwd()
@@ -22,7 +23,10 @@ class file:
         self.FOLDER_DIR = path.join(self.DIRECTORY, "me")
         self.DB_DIR = path.join(self.FOLDER_DIR, "db.txt")
         self.PWD_DIR = path.join(self.FOLDER_DIR, "pwd.txt")
+        self.PC_DIR = path.join(self.FOLDER_DIR, "pc.txt")
         self.DATA_DIR = path.join(self.FOLDER_DIR, "data.json")
+
+        print("-> Init. variables...")
         self.data = {}
         self.db_data = {}
         self.my_name = ""
@@ -73,6 +77,18 @@ class file:
         fernet = Fernet(key)
 
         with open(self.PWD_DIR, "rb") as file:
+            encrypted = file.read()
+
+        decrypted = fernet.decrypt(encrypted)
+        return decrypted.decode()
+
+    def _get_passcode(self) -> str:
+        """Get the passcode from the passcode file."""
+
+        key = self._open_key()
+        fernet = Fernet(key)
+
+        with open(self.PC_DIR, "rb") as file:
             encrypted = file.read()
 
         decrypted = fernet.decrypt(encrypted)

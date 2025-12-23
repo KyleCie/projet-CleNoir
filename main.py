@@ -15,7 +15,7 @@ from hashlib import sha256
 
 if __name__ == "__main__":
     fhandler = file()
-    encr = encryption()
+    encr = encryption(fhandler)
     printer = terminal(fhandler)
     msg = message(fhandler, encr, printer)
     itptr = interpreter()

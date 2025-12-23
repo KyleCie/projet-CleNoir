@@ -17,8 +17,9 @@ from Crypto.Random import get_random_bytes
 
 class rsaSystem:
 
-    def __init__(self) -> None:
-        
+    def __init__(self, file_handler) -> None:
+
+        print("-> Init. RSA system...")
         # directorys.
         print("-> Creating paths...")
         self.DIRECTORY = getcwd()
@@ -32,8 +33,7 @@ class rsaSystem:
         self.private_key = None
         
         # passphrase
-        # TODO: better passCode.
-        self.passCode = "test"
+        self.passCode = file_handler._get_passcode()
 
         # open ( and create ) RSA keys.
         print("-> Checking RSA keys...")
@@ -171,11 +171,12 @@ class aesSystem:
 
 class encryption:
 
-    def __init__(self) -> None:
-        
+    def __init__(self, file_handler) -> None:
+
+        print("-> Init. encryption system...")
         # encryption system.
         print("Starting RSA system...")
-        self.rsa = rsaSystem()
+        self.rsa = rsaSystem(file_handler)
         print("Starting AES system...")
         self.aes = aesSystem()
         print("Encryption system done.")
