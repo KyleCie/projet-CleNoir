@@ -35,9 +35,8 @@ if __name__ == "__main__":
             print("Too many wrong attempts, exiting...")
             exit()
 
-        sleep(1)
-
     print("Starting...")
+    sleep(1)
 
     example_msg = ("[DATE HOUR]", "[PSEUDO]", "ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz 1234567890 ,?;.:/!") # example message for parameters.
     example_note = ("[DATE HOUR]", "ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz 1234567890 ,?;.:/!") # example note for parameters.
@@ -95,12 +94,10 @@ if __name__ == "__main__":
                         continue
 
                     if password == "":
-                        fhandler._delete_pwd_file()
-                        print("Password deleted successfully.")
-                        continue
+                        print("Password empty, removing the old one.")
 
-                    hashed_pwd = sha256(password.encode()).hexdigest()
                     print("Saving new password...")
+                    hashed_pwd = sha256(password.encode()).hexdigest()
                     fhandler._save_password(hashed_pwd)
                     print("Password updated successfully.")
 

@@ -19,11 +19,14 @@ class file:
         print("-> Creating paths...")
         # directorys.
         self.DIRECTORY = getcwd()
+
+        # -> keys paths.
         self.KEY_DIR = path.join(self.DIRECTORY, "pems_files")
         self.MY_KEY = path.join(self.DIRECTORY, "pems_files", "key.pem")
         self.PRIVATE_KEY = path.join(self.DIRECTORY, "pems_files", "private.pem")
         self.PUBLIC_KEY = path.join(self.DIRECTORY, "pems_files", "public.pem")
 
+        # -> data paths.
         self.FOLDER_DIR = path.join(self.DIRECTORY, "me")
         self.DB_DIR = path.join(self.FOLDER_DIR, "db.txt")
         self.PWD_DIR = path.join(self.FOLDER_DIR, "pwd.txt")
@@ -80,6 +83,9 @@ class file:
         key = self._open_key()
         fernet = Fernet(key)
 
+        if not path.exists(self.PWD_DIR):
+            raise FileNotFoundError("Password file not found (1) !")
+
         with open(self.PWD_DIR, "rb") as file:
             encrypted = file.read()
 
@@ -97,12 +103,6 @@ class file:
 
         decrypted = fernet.decrypt(encrypted)
         return decrypted.decode()
-
-    def _delete_pwd_file(self) -> None:
-        """Delete the password file."""
-
-        if path.exists(self.PWD_DIR):
-            path.remove(self.PWD_DIR)
 
     def _open_json(self) -> None:
         """open json file."""
@@ -143,10 +143,9 @@ class file:
     def _save_password(self, password: str) -> None:
         """Encrypt and save the new password into pwd.txt"""
 
-        with open(self.MY_KEY, "rb") as key_file:
-            key = key_file.read()
+        key = self._open_key()
+        fernet = Fernet(key)
 
-        fernet =Fernet(key)
         encrypted = fernet.encrypt(password.encode())
 
         with open(self.PWD_DIR, "wb") as file:
@@ -167,8 +166,13 @@ class file:
         """Verify if the password file is here."""
 
         files = listdir(self.FOLDER_DIR)
-        return "pwd.txt" in files
-    
+        
+        if "pwd.txt" in files:
+            pwd = self._open_pwd()
+            return pwd != "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" # sha256 of empty string.
+
+        raise FileNotFoundError("Password file not found (2) !")
+
     def _verify_keys_files(self) -> bool:
         """Verify if the keys files are here."""
 
