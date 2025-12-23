@@ -24,20 +24,19 @@ class rsaSystem:
         print("-> Creating paths...")
         self.DIRECTORY = getcwd()
         self.FOLDER_DIR = path.join(self.DIRECTORY, "pems_files")
-        self.PRIVATE_DIR = path.join(self.FOLDER_DIR, "private.pem")
-        self.PUBLIC_DIR = path.join(self.FOLDER_DIR, "public.pem")
 
         # RSA keys and passphrase.
         print("-> Init. variables...")
+        self.fhandler = file_handler
         self.public_key = None
         self.private_key = None
         
         # passphrase
-        self.passCode = file_handler._get_passcode()
+        self.passCode = self.fhandler._get_passcode()
 
         # open ( and create ) RSA keys.
         print("-> Checking RSA keys...")
-        if not self._verify_keys_files():
+        if not self.fhandler._verify_keys_files():
             print("--> Keys don't exist ! Creating a set...")
             self._make_RSA_keys()
             print("--> Created.")
@@ -45,13 +44,6 @@ class rsaSystem:
         print("-> Opening files...")
         self._get_RSA_keys()
         print("-> All done.")
-
-    def _verify_keys_files(self) -> bool:
-        """Verify if the keys files are here."""
-
-        files: list[str] = listdir(self.FOLDER_DIR)
-
-        return all(file in files for file in ("private.pem", "public.pem"))
 
     def _make_RSA_keys(self) -> None:
         """Create and save a new set of RSA keys."""
@@ -62,28 +54,19 @@ class rsaSystem:
                                                 protection="scryptAndAES128-CBC",
                                                 prot_params={'iteration_count':131072}
                                             )
-        
-        with open(self.PRIVATE_DIR, "wb") as file:
-            file.write(private_key)
 
         public_key = instance_key.public_key().export_key()
 
-        with open(self.PUBLIC_DIR, "wb") as file:
-            file.write(public_key)
+        self.fhandler._write_RSA_keys(private_key, public_key)
 
     def _get_RSA_keys(self) -> None:
         """Get the RSA set keys from the files."""
 
-        with open(self.PRIVATE_DIR, "rb") as file:
-            key = file.read()
+        private_key, public_key = self.fhandler._get_RSA_keys()
 
-        self.private_key = RSA.import_key(key, passphrase=self.passCode)
+        self.private_key = RSA.import_key(private_key, passphrase=self.passCode)
+        self.public_key = RSA.import_key(public_key)
 
-        with open(self.PUBLIC_DIR, "rb") as file:
-            key = file.read()
-
-        self.public_key = RSA.import_key(key)
-    
     def _get_public_RSA(self) -> bytes:
         """return the public key."""
 

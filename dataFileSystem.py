@@ -19,7 +19,11 @@ class file:
         print("-> Creating paths...")
         # directorys.
         self.DIRECTORY = getcwd()
+        self.KEY_DIR = path.join(self.DIRECTORY, "pems_files")
         self.MY_KEY = path.join(self.DIRECTORY, "pems_files", "key.pem")
+        self.PRIVATE_KEY = path.join(self.DIRECTORY, "pems_files", "private.pem")
+        self.PUBLIC_KEY = path.join(self.DIRECTORY, "pems_files", "public.pem")
+
         self.FOLDER_DIR = path.join(self.DIRECTORY, "me")
         self.DB_DIR = path.join(self.FOLDER_DIR, "db.txt")
         self.PWD_DIR = path.join(self.FOLDER_DIR, "pwd.txt")
@@ -164,3 +168,29 @@ class file:
 
         files = listdir(self.FOLDER_DIR)
         return "pwd.txt" in files
+    
+    def _verify_keys_files(self) -> bool:
+        """Verify if the keys files are here."""
+
+        files = listdir(self.KEY_DIR)
+        return "private.pem" in files and "public.pem" in files
+    
+    def _write_RSA_keys(self, private_key: bytes, public_key: bytes) -> None:
+        """Write the RSA keys into files."""
+
+        with open(self.PRIVATE_KEY, "wb") as prv_file:
+            prv_file.write(private_key)
+
+        with open(self.PUBLIC_KEY, "wb") as pub_file:
+            pub_file.write(public_key)
+    
+    def _get_RSA_keys(self) -> tuple[bytes, bytes]:
+        """Get the RSA set keys from the files."""
+
+        with open(self.PRIVATE_KEY, "rb") as prv_file:
+            private_key = prv_file.read()
+
+        with open(self.PUBLIC_KEY, "rb") as pub_file:
+            public_key = pub_file.read()
+
+        return private_key, public_key
