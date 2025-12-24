@@ -1,5 +1,8 @@
 
-# json, files and dict handler.
+# json, files, dict, and password handler.
+from Crypto.Random import get_random_bytes
+from argon2 import PasswordHasher
+
 from json import dump, loads, load
 from cryptography.fernet import Fernet
 
@@ -37,6 +40,7 @@ class file:
         self.data = {}
         self.db_data = {}
         self.my_name = ""
+        self.pwd_hasher = PasswordHasher(time_cost=10, memory_cost=512000, parallelism=10, hash_len=2056)
         
         print("-> Opening files...")
         self._open_db()
@@ -90,7 +94,8 @@ class file:
             encrypted = file.read()
 
         decrypted = fernet.decrypt(encrypted)
-        return decrypted.decode()
+
+        return decrypted[64:].decode()
 
     def _get_passcode(self) -> str:
         """Get the passcode from the passcode file."""
@@ -146,7 +151,11 @@ class file:
         key = self._open_key()
         fernet = Fernet(key)
 
-        encrypted = fernet.encrypt(password.encode())
+        salt = get_random_bytes(64)
+        derive = self.pwd_hasher.hash(password.encode()).encode()
+        password = salt + derive
+
+        encrypted = fernet.encrypt(password)
 
         with open(self.PWD_DIR, "wb") as file:
             file.write(encrypted)
@@ -174,9 +183,23 @@ class file:
         
         if "pwd.txt" in files:
             pwd = self._open_pwd()
-            return pwd != "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" # sha256 of empty string.
+
+            try:
+                self.pwd_hasher.verify(pwd, "")  # if verification fails, it's not empty/
+                return False
+            except:
+                return True
 
         raise FileNotFoundError("Password file not found (2) !")
+
+    def _check_pwd(self, stored_pwd: str, input_pwd: str) -> bool:
+        """Check if the input password matches the stored password."""
+
+        try:
+            self.pwd_hasher.verify(stored_pwd, input_pwd)
+            return False  # Password is correct
+        except:
+            return True  # Password is incorrect
 
     def _verify_keys_files(self) -> bool:
         """Verify if the keys files are here."""

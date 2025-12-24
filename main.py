@@ -12,7 +12,6 @@ from threading import Thread, Event
 
 from getpass import getpass
 from time import sleep
-from hashlib import sha256
 
 if __name__ == "__main__":
     fhandler = file()
@@ -27,7 +26,7 @@ if __name__ == "__main__":
         user_pwd = getpass("Enter your password: ")
         trys = 1
 
-        while pwd != sha256(user_pwd.encode()).hexdigest() and trys < 4: # password verification loop.
+        while fhandler._check_pwd(pwd, user_pwd) and trys < 4: # password verification loop.
             sleep(1)
             print("Wrong password, try again.")
             user_pwd = getpass("Enter your password: ")
@@ -113,7 +112,7 @@ if __name__ == "__main__":
 
                     print("Resetting myspace...")
                     msg.reset_myspace()
-                    
+
                     print("Done.")
                     continue
 
@@ -134,8 +133,7 @@ if __name__ == "__main__":
                         print("Password empty, removing the old one.")
 
                     print("Saving new password...")
-                    hashed_pwd = sha256(password.encode()).hexdigest()
-                    fhandler._save_password(hashed_pwd)
+                    fhandler._save_password(password)
                     print("Password updated successfully.")
 
                 case "SAY_PSEUDO":
@@ -173,9 +171,8 @@ if __name__ == "__main__":
                         print("Passwords do not match, aborting.")
                         continue
 
-                    hashed_pwd = sha256(new_pwd.encode()).hexdigest()
                     print("Saving new password...")
-                    fhandler._save_password(hashed_pwd)
+                    fhandler._save_password(new_pwd)
                     print("Password updated successfully.")
 
                 case "EXIT":
