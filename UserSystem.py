@@ -59,6 +59,11 @@ class commandSystem:
 
         return "SAY_PSEUDO"
   
+    def _version(self, *args) -> Literal["SAY_VERSION"]:
+        """Return a command to the main to get the version of the app."""
+
+        return "SAY_VERSION"
+
     def _say(self, command: str, *args):
         """Print the thing to say from the command."""
 
@@ -269,6 +274,7 @@ class interpreter:
             "t": "test",
             "c": "contact",
             "m": "myself",
+            "v": "version",
             "pseudo": "myself",
             "contacts": "contact",
             "clr": "clear",
@@ -281,6 +287,7 @@ class interpreter:
         self.auth_commands: dict[str, Callable] = {
             "test": self.commands._test,
             "myself": self.commands._myself,
+            "version": self.commands._version,
             "contact": self.commands._find_contacts,
             "clear": self.commands._clear_terminal,
             "say": self.commands._say,

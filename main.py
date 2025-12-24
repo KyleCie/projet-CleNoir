@@ -128,6 +128,11 @@ if __name__ == "__main__":
                     print(f"pseudo: {myself}")
                     continue
 
+                case "SAY_VERSION":
+                    version = fhandler._get_version()
+                    print(f"version: {version}")
+                    continue
+
                 case "REFRESH":
                     print("refreshing...")
                     msg.refresh()
