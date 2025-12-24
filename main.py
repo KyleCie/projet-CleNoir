@@ -54,10 +54,15 @@ if __name__ == "__main__":
 
         print("STARTING Updating...")
         print("-> initializing by removing the streams...")
+
+        # remove the streams due to unstopping program.
         msg.delete_message_stream()
         msg.delete_notification_stream()
+
         print("-> starting the process...\n")
-        updater.perform_update()
+
+        updater.perform_update() # perform the update.
+
         print("Update finished, please restart the application.")
         exit()
 

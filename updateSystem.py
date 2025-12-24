@@ -171,7 +171,6 @@ class UpdateSystem:
             # Update progress bar
             self.__progress_bar(i + 1, len(commands))
 
-
         logging.info("All commands processed successfully.")
 
         if hasattr(self, "to_Popen"):

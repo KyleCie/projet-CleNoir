@@ -64,7 +64,7 @@ class commandSystem:
 
         return "SAY_VERSION"
 
-    def _say(self, command: str, *args):
+    def _say(self, command: str, *args) -> None:
         """Print the thing to say from the command."""
 
         to_say: str = self._clean_command(command=command, length_words=-1, start_pos=1)
