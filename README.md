@@ -3,7 +3,7 @@
 A **personal end-to-end encrypted communication system** built in Python, designed as a
 **technical showcase project** focusing on cryptography, terminal UX, and secure message flows.
 
-> ⚠️ This project is **not intended for production use**.
+> ⚠️ This project is **not intended for production use** (it wont work, because there missing important files).
 > It exists for **learning, experimentation, and demonstration purposes**.
 
 ---
@@ -15,6 +15,7 @@ This project implements a **hybrid encryption model** combining:
 - **RSA (2048-bit)** for secure key exchange
 - **AES (EAX mode)** for authenticated message encryption
 - **Base64 encoding** for transport-safe payloads
+- **Argon2 hashing** for the password system
 
 The system runs entirely in the terminal and supports:
 
@@ -25,6 +26,7 @@ The system runs entirely in the terminal and supports:
 - Password-protected local data
 - Customizable terminal colors
 - Background decryption with threading
+- Password system
 
 All cryptographic operations happen **end-to-end**: plaintext data is never stored or transmitted unencrypted.
 
