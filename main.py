@@ -3,6 +3,7 @@ from messageSystem import message
 from UserSystem import interpreter
 from TerminalSystem import terminal
 from dataFileSystem import file
+from updateSystem import update
 
 from prompt_toolkit import PromptSession
 from prompt_toolkit.patch_stdout import patch_stdout
@@ -19,6 +20,7 @@ if __name__ == "__main__":
     printer = terminal(fhandler)
     msg = message(fhandler, encr, printer)
     itptr = interpreter()
+    updater = update(msg, fhandler)
 
     if fhandler._verify_pwd_file():
         pwd = fhandler._open_pwd()
@@ -37,6 +39,27 @@ if __name__ == "__main__":
 
     print("Starting...")
     sleep(1)
+    print("Checking for updates...")
+
+    if updater.check_for_updates():
+        print("An update is available !")
+        r = input("Do you want to update now ? (y/n, if no: the app wont start!) : ")
+
+        if r.lower() in ["n", "no"]:
+            print("Exiting...")
+            # remove the streams due to unstopping program.
+            msg.delete_message_stream()
+            msg.delete_notification_stream()
+            exit()
+
+        print("STARTING Updating...")
+        print("-> initializing by removing the streams...")
+        msg.delete_message_stream()
+        msg.delete_notification_stream()
+        print("-> starting the process...\n")
+        updater.perform_update()
+        print("Update finished, please restart the application.")
+        exit()
 
     example_msg = ("[DATE HOUR]", "[PSEUDO]", "ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz 1234567890 ,?;.:/!") # example message for parameters.
     example_note = ("[DATE HOUR]", "ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz 1234567890 ,?;.:/!") # example note for parameters.

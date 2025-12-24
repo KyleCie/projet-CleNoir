@@ -156,6 +156,11 @@ class file:
 
         return self.data.get("parameters")
 
+    def _get_version(self) -> str:
+        """Return the current version of the application."""
+
+        return self.data.get("version", "0.0.0")
+
     def _verify_json_files(self) -> bool:
         """Verify if the data file is here."""
 

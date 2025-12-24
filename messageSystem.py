@@ -297,6 +297,17 @@ class dataSystem:
         
         return ""
 
+    def _get_updates(self) -> dict:
+        """Return the updates informations from database."""
+
+        if not self.database:
+            raise ValueError("The value of database is None.")
+
+        updates = self.database.child("updates").get()
+        updates = updates.val()
+
+        return updates
+
     def _is_database_exist(self, database: str, is_msg: bool = False) -> bool:
         """Return a bool if the database `database` exist."""
 
@@ -489,6 +500,11 @@ class message:
 
         return self.data._get_raw_notifications()
     
+    def get_updates(self) -> dict:
+        """Return the updates informations from database."""
+
+        return self.data._get_updates()
+
     def transform_notifications(self, notifications: list[dict]) -> list[tuple[str, str ,str]] | list[str]:
         """Return a printable list of notifications `notifications` (NEED TO BE DECRYPTED BEFORE)."""
     
