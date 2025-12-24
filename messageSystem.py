@@ -206,6 +206,14 @@ class dataSystem:
 
         return list_notes
 
+    def _del_myspace(self) -> None:
+        """Delete the myspace of the user."""
+
+        if not self.database:
+            raise ValueError("The value of database is None.")
+
+        self.database.child("users").child(self.my_name).child("myspace").set({})
+
     def _get_data_from_database(self, database: str, is_msg: bool = False, stream: bool = False) -> list[dict]:
         """Return the raw data from database `database`."""
 
@@ -464,6 +472,11 @@ class message:
         """Return all the messages from a myspace `myspace`.""" 
 
         return self.data._get_data_from_myspace(myspace_name)
+
+    def reset_myspace(self) -> None:
+        """Reset the user's myspace."""
+
+        self.data._del_myspace()
 
     def find_conversation(self, user: str) -> str:
         """Find the name of the database from user, and create one if not created."""

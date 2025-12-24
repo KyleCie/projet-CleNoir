@@ -103,9 +103,18 @@ if __name__ == "__main__":
                     continue
 
                 case "RESET_RSA_KEYS":  # reset the rsa keys.
+                    print("Resetting the RSA keys...")
                     encr.reset_keys() # TODO: put to True the `sure` to really reset.
                     key = encr.public_key_RSA()
                     msg.sendPublicKey(key)
+
+                    print("Resetting notifications...")
+                    msg.delete_notifications()
+
+                    print("Resetting myspace...")
+                    msg.reset_myspace()
+                    
+                    print("Done.")
                     continue
 
                 case "RESET_NOTIF":
